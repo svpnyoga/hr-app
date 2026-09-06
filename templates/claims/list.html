@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Expense Claims{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Expense Claims</h1>
+    <div class="sub">{{ rows|length }} claim{{ 's' if rows|length != 1 else '' }}{{ ' (your claims)' if not view_all else '' }}</div>
+  </div>
+  <div class="actions">
+    {% if has_permission('claims.claims.create') %}
+    <a class="btn primary" href="{{ url_for('claims.claim_new') }}">{{ ic.icon('plus',15) }} New Claim</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if kpis %}
+<div class="kpi-grid" style="margin-bottom:18px">
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--amber-bg);color:var(--amber)">{{ ic.icon('clock',18) }}</div>
+    <div>
+      <div class="value">{{ kpis.pending.c }}</div>
+      <div class="label">Pending &middot; {{ kpis.pending.amt|money }}</div>
+    </div>
+  </div>
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--green-bg);color:var(--green)">{{ ic.icon('check',18) }}</div>
+    <div>
+      <div class="value">{{ kpis.approved_month.c }}</div>
+      <div class="label">Approved this month &middot; {{ kpis.approved_month.amt|money }}</div>
+    </div>
+  </div>
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--blue-bg);color:var(--blue)">{{ ic.icon('wallet',18) }}</div>
+    <div>
+      <div class="value">{{ kpis.paid_month.c }}</div>
+      <div class="label">Paid this month &middot; {{ kpis.paid_month.amt|money }}</div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-pad" style="padding-bottom:0">
+    <form class="toolbar" method="get">
+      {% if view_all %}
+      <select name="employee_id" class="filter-select" onchange="this.form.submit()">
+        <option value="">All employees</option>
+        {% for e in employees %}
+        <option value="{{ e.id }}" {{ 'selected' if employee_filter == e.id }}>{{ e.name }}</option>
+        {% endfor %}
+      </select>
+      {% endif %}
+      <select name="status" class="filter-select" onchange="this.form.submit()">
+        <option value="">All statuses</option>
+        {% for s in statuses %}
+        <option value="{{ s }}" {{ 'selected' if status_filter == s }}>{{ s }}</option>
+        {% endfor %}
+      </select>
+      {% if status_filter or employee_filter %}
+      <a class="btn sm ghost" href="{{ url_for('claims.claims_list') }}">Clear filters</a>
+      {% endif %}
+    </form>
+  </div>
+  <div class="table-wrap">
+    {% if rows %}
+    <table class="dt">
+      <thead><tr>
+        <th>Claim #</th>
+        {% if view_all %}<th>Employee</th>{% endif %}
+        <th>Type</th>
+        <th>Expense date</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th style="text-align:right">Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td><a href="{{ url_for('claims.claim_view', id=row.id) }}" style="font-weight:650">{{ row.claim_number }}</a></td>
+          {% if view_all %}<td>{{ row.employee_name }}</td>{% endif %}
+          <td>{{ row.claim_type_name }}</td>
+          <td>{{ row.expense_date|fmt_date }}</td>
+          <td>{{ row.amount|money }}</td>
+          <td><span class="badge {{ status_badge_class(row.status) }}">{{ row.status }}</span></td>
+          <td>
+            <div class="row-actions">
+              <a class="btn sm btn-icon" href="{{ url_for('claims.claim_view', id=row.id) }}" title="View">{{ ic.icon('eye',14) }}</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="ic">{{ ic.icon('credit-card', 34) }}</div>
+      <p>No expense claims found.</p>
+    </div>
+    {% endif %}
+  </div>
+  <div style="height:14px"></div>
+</div>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}New Candidate{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('recruitment.candidates_list') }}">Candidates</a> / New</div>
+<div class="page-head"><div><h1>New Candidate</h1></div></div>
+
+<div class="card card-pad" style="max-width:880px">
+  <form method="post" enctype="multipart/form-data">
+    <div class="form-grid">
+      <div class="field">
+        <label>Full Name <span class="req">*</span></label>
+        <input type="text" name="full_name" required>
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" name="email">
+      </div>
+      <div class="field">
+        <label>Phone</label>
+        <input type="tel" name="phone">
+      </div>
+      <div class="field">
+        <label>Total Experience (years)</label>
+        <input type="number" step="0.1" name="total_experience_years">
+      </div>
+      <div class="field">
+        <label>Current Company</label>
+        <input type="text" name="current_company">
+      </div>
+      <div class="field">
+        <label>Current Designation</label>
+        <input type="text" name="current_designation">
+      </div>
+      <div class="field">
+        <label>Current Salary</label>
+        <input type="number" step="any" name="current_salary">
+      </div>
+      <div class="field">
+        <label>Expected Salary</label>
+        <input type="number" step="any" name="expected_salary">
+      </div>
+      <div class="field">
+        <label>Notice Period (days)</label>
+        <input type="number" step="1" name="notice_period_days">
+      </div>
+      <div class="field">
+        <label>Qualification</label>
+        <input type="text" name="qualification">
+      </div>
+      <div class="field full">
+        <label>Skills</label>
+        <input type="text" name="skills" placeholder="Comma-separated, e.g. Python, SQL, Excel">
+      </div>
+      <div class="field">
+        <label>Source</label>
+        <input type="text" name="source" placeholder="e.g. Referral, LinkedIn, Job Board">
+      </div>
+      <div class="field">
+        <label>Resume</label>
+        <input type="file" name="resume">
+        <div class="help-text">PDF or document upload (optional).</div>
+      </div>
+      {% if open_requisitions %}
+      <div class="field full">
+        <label>Apply immediately to (optional)</label>
+        <select name="requisition_id">
+          <option value="">— Don't apply yet —</option>
+          {% for r in open_requisitions %}<option value="{{ r.id }}">{{ r.requisition_number }} — {{ r.title }}</option>{% endfor %}
+        </select>
+      </div>
+      {% endif %}
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Add Candidate</button>
+      <a class="btn" href="{{ url_for('recruitment.candidates_list') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

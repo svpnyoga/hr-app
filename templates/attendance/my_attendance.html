@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}My Attendance{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>My Attendance</h1>
+    <div class="sub">{{ month_name if month_name is defined else '' }}</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <a class="btn" href="{{ url_for('attendance.regularization_new') }}">{{ ic.icon('pencil',15) }} Request Regularization</a>
+    {% if today_row and today_row.check_in and not today_row.check_out %}
+    <form method="post" action="{{ url_for('attendance.check_out') }}"><button class="btn accent" type="submit">{{ ic.icon('clock',15) }} Check Out</button></form>
+    {% elif not today_row or not today_row.check_in %}
+    <form method="post" action="{{ url_for('attendance.check_in') }}"><button class="btn primary" type="submit">{{ ic.icon('clock',15) }} Check In</button></form>
+    {% else %}
+    <span class="badge green">Checked in &amp; out today</span>
+    {% endif %}
+  </div>
+</div>
+
+<div class="kpi-grid" style="margin-bottom:18px">
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--green-bg);color:var(--green)">{{ ic.icon('check',18) }}</div>
+    <div><div class="value">{{ summary.present }}</div><div class="label">Present days</div></div>
+  </div>
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--red-bg);color:var(--red)">{{ ic.icon('close',18) }}</div>
+    <div><div class="value">{{ summary.absent }}</div><div class="label">Absent days</div></div>
+  </div>
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--indigo-bg);color:var(--indigo)">{{ ic.icon('umbrella',18) }}</div>
+    <div><div class="value">{{ summary.leave }}</div><div class="label">On leave</div></div>
+  </div>
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--amber-bg);color:var(--amber)">{{ ic.icon('gauge',18) }}</div>
+    <div><div class="value">{{ summary.half_day }}</div><div class="label">Half days</div></div>
+  </div>
+</div>
+
+<div class="card card-pad" style="margin-bottom:18px">
+  <h3 style="margin-bottom:10px">Work hours — last 14 marked days</h3>
+  <svg id="hoursChart" style="width:100%;height:220px"></svg>
+</div>
+
+<div class="card">
+  <div class="card-pad" style="padding-bottom:0">
+    <form class="toolbar" method="get">
+      <select class="filter-select" name="month" onchange="this.form.submit()">
+        {% for m in range(1,13) %}
+        <option value="{{ m }}" {{ 'selected' if m == month }}>{{ ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m] }}</option>
+        {% endfor %}
+      </select>
+      <select class="filter-select" name="year" onchange="this.form.submit()">
+        {% for y in range(year-2, year+2) %}
+        <option value="{{ y }}" {{ 'selected' if y == year }}>{{ y }}</option>
+        {% endfor %}
+      </select>
+    </form>
+  </div>
+  <div class="table-wrap">
+    {% if rows %}
+    <table class="dt">
+      <thead><tr><th>Date</th><th>Status</th><th>Check In</th><th>Check Out</th><th>Late (min)</th><th>OT (min)</th><th>Hours</th></tr></thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>{{ r.date|fmt_date }}</td>
+          <td><span class="badge {{ status_badge_class(r.status) }}">{{ r.status }}</span></td>
+          <td>{{ r.check_in|fmt_time if r.check_in else '—' }}</td>
+          <td>{{ r.check_out|fmt_time if r.check_out else '—' }}</td>
+          <td>{{ r.late_minutes or 0 }}</td>
+          <td>{{ r.overtime_minutes or 0 }}</td>
+          <td>{{ r.work_hours or 0 }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="ic">{{ ic.icon('clock', 34) }}</div>
+      <p>No attendance records for this month yet.</p>
+    </div>
+    {% endif %}
+  </div>
+  <div class="card-pad"></div>
+</div>
+
+<script>
+drawBarChart('hoursChart', {{ chart_data|tojson }}, {color: '#245b96'});
+</script>
+{% endblock %}

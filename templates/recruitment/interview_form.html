@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Schedule Interview{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('recruitment.application_view', id=app.id) }}">{{ app.candidate_name }}</a> / Schedule Interview</div>
+<div class="page-head"><div><h1>Schedule Interview</h1><div class="sub">{{ app.candidate_name }} — {{ app.requisition_title }}</div></div></div>
+
+<div class="card card-pad" style="max-width:720px">
+  <form method="post">
+    <div class="form-grid">
+      <div class="field">
+        <label>Round Name <span class="req">*</span></label>
+        <input type="text" name="round_name" placeholder="e.g. Technical Round 1" required>
+      </div>
+      <div class="field">
+        <label>Scheduled At</label>
+        <input type="datetime-local" name="scheduled_at">
+      </div>
+      <div class="field">
+        <label>Interviewer Name</label>
+        <input type="text" name="interviewer_name">
+      </div>
+      <div class="field">
+        <label>Mode</label>
+        <select name="mode">
+          {% for m in modes %}<option value="{{ m }}">{{ m }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Rating (1-5)</label>
+        <input type="number" name="rating" min="1" max="5" step="1">
+      </div>
+      <div class="field">
+        <label>Recommendation</label>
+        <select name="recommendation">
+          <option value="">— Select —</option>
+          {% for r in recommendations %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field full">
+        <label>Feedback</label>
+        <textarea name="feedback" rows="4"></textarea>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Schedule Interview</button>
+      <a class="btn" href="{{ url_for('recruitment.application_view', id=app.id) }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

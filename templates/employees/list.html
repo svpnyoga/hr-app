@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Employees{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Employees</h1>
+    <div class="sub">{{ total }} employee{{ 's' if total != 1 else '' }} in the directory</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    {% if can_export %}
+    <a class="btn" href="?{{ request.query_string.decode() }}{{ '&' if request.query_string else '' }}export=csv">{{ ic.icon('download',15) }} Export CSV</a>
+    {% endif %}
+    {% if can_create %}
+    <a class="btn primary" href="{{ url_for('employees.new') }}">{{ ic.icon('plus',15) }} New Employee</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-pad" style="padding-bottom:0">
+    <form class="toolbar" method="get">
+      <div class="search-box">
+        {{ ic.icon('search',13) }}
+        <input type="text" name="q" value="{{ q }}" placeholder="Search name, code, email, phone...">
+      </div>
+      <select class="filter-select" name="department_id" onchange="this.form.submit()">
+        <option value="">All Departments</option>
+        {% for d in departments %}<option value="{{ d.id }}" {{ 'selected' if department_id==d.id }}>{{ d.name }}</option>{% endfor %}
+      </select>
+      <select class="filter-select" name="designation_id" onchange="this.form.submit()">
+        <option value="">All Designations</option>
+        {% for d in designations %}<option value="{{ d.id }}" {{ 'selected' if designation_id==d.id }}>{{ d.title }}</option>{% endfor %}
+      </select>
+      <select class="filter-select" name="location_id" onchange="this.form.submit()">
+        <option value="">All Locations</option>
+        {% for l in locations %}<option value="{{ l.id }}" {{ 'selected' if location_id==l.id }}>{{ l.name }}</option>{% endfor %}
+      </select>
+      <select class="filter-select" name="employment_status" onchange="this.form.submit()">
+        <option value="">All Statuses</option>
+        {% for s in employment_statuses %}<option value="{{ s }}" {{ 'selected' if employment_status==s }}>{{ s }}</option>{% endfor %}
+      </select>
+      <button class="btn sm" type="submit">Filter</button>
+      {% if q or department_id or designation_id or location_id or employment_status %}
+      <a class="btn sm ghost" href="{{ url_for('employees.list_view') }}">Clear</a>
+      {% endif %}
+    </form>
+  </div>
+  <div class="table-wrap">
+    {% if rows %}
+    <table class="dt">
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>Department</th>
+          <th>Designation</th>
+          <th>Location</th>
+          <th>Joining Date</th>
+          <th>Manager</th>
+          <th>Status</th>
+          <th>Contact</th>
+          <th style="text-align:right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>
+            <div class="cell-person">
+              <div class="avatar">
+                {% if r.photo_path %}<img src="{{ url_for('static', filename='uploads/' + r.photo_path) }}">
+                {% else %}{{ (r.first_name ~ ' ' ~ r.last_name)|initials }}{% endif %}
+              </div>
+              <div>
+                <div class="n">{{ r.first_name }} {{ r.last_name }}</div>
+                <div class="s">{{ r.employee_code }}</div>
+              </div>
+            </div>
+          </td>
+          <td>{{ r.department_name or '—' }}</td>
+          <td>{{ r.designation_name or '—' }}</td>
+          <td>{{ r.location_name or '—' }}</td>
+          <td>{{ r.date_of_joining|fmt_date }}</td>
+          <td>{{ r.manager_name or '—' }}</td>
+          <td><span class="badge {{ status_badge_class(r.employment_status) }}">{{ r.employment_status }}</span></td>
+          <td>
+            {{ r.work_email or r.personal_email or '—' }}<br>
+            <span class="text-muted">{{ r.work_phone or r.personal_phone or '' }}</span>
+          </td>
+          <td>
+            <div class="row-actions">
+              <a class="btn sm btn-icon" href="{{ url_for('employees.view', id=r.id) }}" title="View">{{ ic.icon('eye',14) }}</a>
+              {% if has_permission('employees.employees.edit') %}
+              <a class="btn sm btn-icon" href="{{ url_for('employees.edit', id=r.id) }}" title="Edit">{{ ic.icon('pencil',14) }}</a>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="ic">{{ ic.icon('id-card', 34) }}</div>
+      <p>No employees found{{ ' for "%s"'|format(q) if q else '' }}.</p>
+    </div>
+    {% endif %}
+  </div>
+  <div class="card-pad" style="padding-top:12px">
+    {% include "partials/pagination.html" %}
+  </div>
+</div>
+{% endblock %}

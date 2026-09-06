@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}{{ report_title }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('reports.index') }}">Reports</a> / {{ report_title }}</div>
+<div class="page-head">
+  <div>
+    <h1>{{ report_title }}</h1>
+    <div class="sub">{{ report_subtitle }}</div>
+  </div>
+  <div class="actions">
+    {% if can_export %}
+    <a class="btn" href="?export=csv">{{ ic.icon('download',15) }} Export CSV</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="kpi-grid">
+  {% for t in tiles %}
+  <div class="kpi-tile">
+    <div class="icon" style="background:{{ t.bg }};color:{{ t.fg }}">{{ ic.icon(t.icon, 17) }}</div>
+    <div><div class="value">{{ t.value }}</div><div class="label">{{ t.label }}</div></div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

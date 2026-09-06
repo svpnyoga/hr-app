@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}New Claim{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('claims.claims_list') }}">Expense Claims</a> / New</div>
+<div class="page-head"><div><h1>New Expense Claim</h1></div></div>
+
+<div class="card card-pad" style="max-width:800px">
+  <form method="post" enctype="multipart/form-data">
+    <div class="form-grid">
+      <div class="field">
+        <label>Claim type <span class="req">*</span></label>
+        <select name="claim_type_id" required>
+          <option value="">— Select —</option>
+          {% for t in claim_types %}
+          <option value="{{ t.id }}">{{ t.name }}{% if t.max_amount %} (max {{ t.max_amount|money }}){% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Expense date <span class="req">*</span></label>
+        <input type="date" name="expense_date" value="{{ today }}" max="{{ today }}" required>
+      </div>
+      <div class="field">
+        <label>Amount <span class="req">*</span></label>
+        <input type="number" step="0.01" min="0.01" name="amount" required>
+      </div>
+      <div class="field">
+        <label>Project / Department</label>
+        <input type="text" name="project_or_department" placeholder="e.g. Client Onsite, Marketing">
+      </div>
+      <div class="field full">
+        <label>Description</label>
+        <textarea name="description" placeholder="What was this expense for?"></textarea>
+      </div>
+      <div class="field full">
+        <label>Receipt</label>
+        <input type="file" name="receipt" accept="image/*,.pdf">
+        <div class="help-text">Upload a scanned receipt or invoice (image or PDF).</div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">{{ ic.icon('send',15) }} Submit claim</button>
+      <a class="btn" href="{{ url_for('claims.claims_list') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

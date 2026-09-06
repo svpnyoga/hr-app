@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}{{ course.title }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('learning.courses_list') }}">Courses</a> / {{ course.course_code }}</div>
+<div class="page-head">
+  <div>
+    <h1>{{ course.title }}</h1>
+    <span class="badge {{ status_badge_class(course.delivery_mode) }}">{{ course.delivery_mode }}</span>
+    <span class="badge {{ 'green' if course.is_active else 'gray' }}">{{ 'Active' if course.is_active else 'Inactive' }}</span>
+  </div>
+  <div style="display:flex;gap:8px">
+    {% if can_edit %}<a class="btn" href="{{ url_for('learning.course_edit', id=course.id) }}">{{ ic.icon('pencil',15) }} Edit</a>{% endif %}
+    {% if can_schedule %}<a class="btn primary" href="{{ url_for('learning.session_new', course_id=course.id) }}">{{ ic.icon('plus',15) }} Schedule session</a>{% endif %}
+  </div>
+</div>
+
+<div class="detail-grid">
+  <div class="card card-pad">
+    <h3 style="margin-bottom:14px">Details</h3>
+    <div class="kv">
+      <div class="k">Course code</div><div>{{ course.course_code }}</div>
+      <div class="k">Category</div><div>{{ course.category or '—' }}</div>
+      <div class="k">Duration</div><div>{{ course.duration_hours }} hrs</div>
+      <div class="k">Trainer</div><div>{{ course.trainer_name or '—' }}</div>
+      <div class="k">Description</div><div>{{ course.description or '—' }}</div>
+    </div>
+  </div>
+  <div class="card card-pad">
+    <h3 style="margin-bottom:10px">Record info</h3>
+    <div class="kv">
+      <div class="k">Record ID</div><div>#{{ course.id }}</div>
+      <div class="k">Sessions</div><div>{{ sessions|length }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:18px">
+  <div class="card-head"><h3>Training sessions</h3></div>
+  <div class="table-wrap">
+    {% if sessions %}
+    <table class="dt">
+      <thead><tr>
+        <th>Date</th><th>Time</th><th>Trainer</th><th>Location</th><th>Capacity</th><th>Enrolled</th><th>Status</th><th style="text-align:right">Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for s in sessions %}
+        <tr>
+          <td>{{ s.session_date|fmt_date }}</td>
+          <td>{{ s.start_time|fmt_time if s.start_time else '—' }}{% if s.end_time %} – {{ s.end_time|fmt_time }}{% endif %}</td>
+          <td>{{ s.trainer_name or '—' }}</td>
+          <td>{{ s.location_name or '—' }}</td>
+          <td>{{ s.capacity }}</td>
+          <td>{{ s.enrolled_count }}</td>
+          <td><span class="badge {{ status_badge_class(s.status) }}">{{ s.status }}</span></td>
+          <td>
+            <div class="row-actions">
+              <a class="btn sm btn-icon" href="{{ url_for('learning.session_view', id=s.id) }}" title="View">{{ ic.icon('eye',14) }}</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="ic">{{ ic.icon('calendar', 34) }}</div>
+      <p>No sessions scheduled for this course yet.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

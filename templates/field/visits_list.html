@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Field Visits{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Field visits</h1>
+    <div class="sub">{{ total }} visit{{ 's' if total != 1 else '' }}{{ ' (all employees)' if view_all else ' (mine)' }}</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <a class="btn" href="{{ url_for('field.my_visits') }}">{{ ic.icon('map-pin',15) }} My visits</a>
+    {% if can_create %}
+    <a class="btn primary" href="{{ url_for('field.visit_new') }}">{{ ic.icon('plus',15) }} Plan visit</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="kpi-grid" style="margin-bottom:18px">
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--blue-bg);color:var(--blue)">{{ ic.icon('calendar',18) }}</div>
+    <div><div class="value">{{ kpi_today }}</div><div class="label">Today's visits</div></div>
+  </div>
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--amber-bg);color:var(--amber)">{{ ic.icon('map-pin',18) }}</div>
+    <div><div class="value">{{ kpi_in_field }}</div><div class="label">Currently in field</div></div>
+  </div>
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--green-bg);color:var(--green)">{{ ic.icon('check',18) }}</div>
+    <div><div class="value">{{ kpi_completed_today }}</div><div class="label">Completed today</div></div>
+  </div>
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--indigo-bg);color:var(--indigo)">{{ ic.icon('trending-up',18) }}</div>
+    <div><div class="value">{{ '%.1f'|format(kpi_avg_distance) }} km</div><div class="label">Avg. travel distance</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-pad" style="padding-bottom:0">
+    <form class="toolbar" method="get">
+      {% if view_all %}
+      <select name="employee_id" class="filter-select" onchange="this.form.submit()">
+        <option value="">All employees</option>
+        {% for e in employees %}
+        <option value="{{ e.id }}" {{ 'selected' if employee_id == e.id }}>{{ e.first_name }} {{ e.last_name }} ({{ e.employee_code }})</option>
+        {% endfor %}
+      </select>
+      {% endif %}
+      <input type="date" name="from_date" value="{{ from_date }}" title="From date">
+      <input type="date" name="to_date" value="{{ to_date }}" title="To date">
+      <button class="btn sm" type="submit">Filter</button>
+      {% if from_date or to_date or employee_id %}<a class="btn sm ghost" href="{{ url_for('field.visits_list') }}">Clear</a>{% endif %}
+    </form>
+  </div>
+  <div class="table-wrap">
+    {% if rows %}
+    <table class="dt">
+      <thead><tr>
+        <th>Employee</th><th>Date</th><th>Customer</th><th>Purpose</th><th>Check-in</th><th>Check-out</th><th>Status</th><th>Distance</th><th style="text-align:right">Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>{{ row.first_name }} {{ row.last_name }} <span class="text-muted">({{ row.employee_code }})</span></td>
+          <td>{{ row.visit_date|fmt_date }}</td>
+          <td>{{ row.customer_name }}</td>
+          <td>{{ row.purpose or '—' }}</td>
+          <td>{{ row.check_in_time|fmt_time if row.check_in_time else '—' }}</td>
+          <td>{{ row.check_out_time|fmt_time if row.check_out_time else '—' }}</td>
+          <td><span class="badge {{ status_badge_class(row.status) }}">{{ row.status }}</span></td>
+          <td>{{ row.travel_distance_km if row.travel_distance_km is not none else '—' }}</td>
+          <td>
+            <div class="row-actions">
+              <a class="btn sm btn-icon" href="{{ url_for('field.visit_view', id=row.id) }}" title="View">{{ ic.icon('eye',14) }}</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="ic">{{ ic.icon('map-pin', 34) }}</div>
+      <p>No field visits found.</p>
+    </div>
+    {% endif %}
+  </div>
+  <div class="card-pad" style="padding-top:12px">
+    {% include "partials/pagination.html" %}
+  </div>
+</div>
+{% endblock %}

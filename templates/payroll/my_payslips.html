@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}My Payslips{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>My Payslips</h1><div class="sub">{{ rows|length }} processed payslip{{ 's' if rows|length != 1 else '' }}</div></div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    {% if rows %}
+    <table class="dt">
+      <thead><tr>
+        <th>Period</th><th>Run #</th><th>Gross</th><th>Deductions</th><th>Net Pay</th><th style="text-align:right">Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>{{ r.period_label }}</td>
+          <td>{{ r.run_number }}</td>
+          <td>{{ r.gross_earnings|money }}</td>
+          <td>{{ r.total_deductions|money }}</td>
+          <td><strong>{{ r.net_pay|money }}</strong></td>
+          <td>
+            <div class="row-actions">
+              <a class="btn sm btn-icon" href="{{ url_for('payroll.payslip_view', id=r.id) }}" title="View payslip">{{ ic.icon('eye',14) }}</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="ic">{{ ic.icon('wallet', 34) }}</div>
+      <p>No payslips yet. They'll appear here once a payroll run covering you is processed.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

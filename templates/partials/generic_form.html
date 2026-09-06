@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if row else 'New' }} {{ cfg.name_singular }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for(request.blueprint + '.' + cfg.key + '_list') }}">{{ cfg.name_plural }}</a> / {{ 'Edit' if row else 'New' }}</div>
+<div class="page-head"><div><h1>{{ 'Edit' if row else 'New' }} {{ cfg.name_singular }}</h1></div></div>
+
+<div class="card card-pad" style="max-width:880px">
+  <form method="post">
+    <div class="form-grid">
+      {% for f in fields %}
+      <div class="field {{ 'full' if f.type == 'textarea' }}">
+        <label>{{ f.label }} {% if f.required %}<span class="req">*</span>{% endif %}</label>
+        {% if f.type == 'textarea' %}
+          <textarea name="{{ f.name }}" {{ 'required' if f.required }}>{{ row[f.name] if row else (f.default or '') }}</textarea>
+        {% elif f.type == 'select' %}
+          <select name="{{ f.name }}" {{ 'required' if f.required }}>
+            <option value="">— Select —</option>
+            {% for val, label in options.get(f.name, []) %}
+              <option value="{{ val }}" {{ 'selected' if row and row[f.name]==val }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        {% elif f.type == 'static-select' %}
+          <select name="{{ f.name }}" {{ 'required' if f.required }}>
+            {% for val, label in f.options %}
+              <option value="{{ val }}" {{ 'selected' if (row and row[f.name]==val) or (not row and f.default==val) }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        {% elif f.type == 'checkbox' %}
+          <div class="checkbox-row"><input type="checkbox" name="{{ f.name }}" {{ 'checked' if row and row[f.name] }}> <span class="help-text">Enable</span></div>
+        {% else %}
+          <input type="{{ f.type }}" step="{{ f.step }}" name="{{ f.name }}" value="{{ row[f.name] if row and row[f.name] is not none else (f.default or '') }}" {{ 'required' if f.required }}>
+        {% endif %}
+        {% if f.help %}<div class="help-text">{{ f.help }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">{{ 'Save changes' if row else 'Create ' + cfg.name_singular }}</button>
+      {% if row %}
+      <a class="btn" href="{{ url_for(request.blueprint + '.' + cfg.key + '_view', id=row.id) }}">Cancel</a>
+      {% else %}
+      <a class="btn" href="{{ url_for(request.blueprint + '.' + cfg.key + '_list') }}">Cancel</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

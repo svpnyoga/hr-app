@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}CRM Customers{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Customers</h1>
+    <div class="sub">{{ total }} customer{{ 's' if total != 1 else '' }}</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    {% if can_create %}
+    <a class="btn primary" href="{{ url_for('crm.customer_new') }}">{{ ic.icon('plus',15) }} New Customer</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="tabs">
+  <a class="active" href="{{ url_for('crm.customers_list') }}">{{ ic.icon('building',14) }} Customers</a>
+  <a href="{{ url_for('crm.leads_pipeline') }}">{{ ic.icon('handshake',14) }} Leads Pipeline</a>
+</div>
+
+<div class="card">
+  <div class="card-pad" style="padding-bottom:0">
+    <form class="toolbar" method="get">
+      <div class="search-box">
+        {{ ic.icon('search',13) }}
+        <input type="text" name="q" value="{{ q }}" placeholder="Search customers...">
+      </div>
+      <button class="btn sm" type="submit">Search</button>
+      {% if q %}<a class="btn sm ghost" href="{{ url_for('crm.customers_list') }}">Clear</a>{% endif %}
+    </form>
+  </div>
+  <div class="table-wrap">
+    {% if rows %}
+    <table class="dt">
+      <thead><tr>
+        <th>Name</th><th>Industry</th><th>Phone</th><th>Email</th><th>City</th><th>Owner</th>
+        <th style="text-align:right">Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>{{ row.name }}</td>
+          <td>{{ row.industry or '—' }}</td>
+          <td>{{ row.phone or '—' }}</td>
+          <td>{{ row.email or '—' }}</td>
+          <td>{{ row.city or '—' }}</td>
+          <td>{{ row.owner_name or '—' }}</td>
+          <td>
+            <div class="row-actions">
+              <a class="btn sm btn-icon" href="{{ url_for('crm.customer_view', id=row.id) }}" title="View">{{ ic.icon('eye',14) }}</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="ic">{{ ic.icon('building', 34) }}</div>
+      <p>No customers found{{ ' for "%s"'|format(q) if q else '' }}.</p>
+    </div>
+    {% endif %}
+  </div>
+  <div class="card-pad" style="padding-top:12px">
+    {% include "partials/pagination.html" %}
+  </div>
+</div>
+{% endblock %}

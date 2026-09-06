@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Daily Attendance{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Daily Attendance</h1>
+    <div class="sub">Roster for {{ date_str|fmt_date }}</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <a class="btn" href="{{ url_for('attendance.regularization_list') }}">{{ ic.icon('history',15) }} Regularizations</a>
+    {% if can_export %}
+    <a class="btn" href="?{{ request.query_string.decode() }}{{ '&' if request.query_string else '' }}export=csv">{{ ic.icon('download',15) }} Export CSV</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="kpi-grid" style="margin-bottom:18px">
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--green-bg);color:var(--green)">{{ ic.icon('check',18) }}</div>
+    <div><div class="value">{{ kpi.present }}</div><div class="label">Present</div></div>
+  </div>
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--red-bg);color:var(--red)">{{ ic.icon('close',18) }}</div>
+    <div><div class="value">{{ kpi.absent }}</div><div class="label">Absent</div></div>
+  </div>
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--amber-bg);color:var(--amber)">{{ ic.icon('clock',18) }}</div>
+    <div><div class="value">{{ kpi.late }}</div><div class="label">Late Arrivals</div></div>
+  </div>
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--indigo-bg);color:var(--indigo)">{{ ic.icon('umbrella',18) }}</div>
+    <div><div class="value">{{ kpi.on_leave }}</div><div class="label">On Leave</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-pad" style="padding-bottom:0">
+    <form class="toolbar" method="get">
+      <div class="field" style="gap:4px">
+        <input type="date" name="date" value="{{ date_str }}" onchange="this.form.submit()">
+      </div>
+      <select class="filter-select" name="department_id" onchange="this.form.submit()">
+        <option value="">All departments</option>
+        {% for d in departments %}
+        <option value="{{ d.id }}" {{ 'selected' if department_id|string == d.id|string }}>{{ d.name }}</option>
+        {% endfor %}
+      </select>
+      <select class="filter-select" name="status" onchange="this.form.submit()">
+        <option value="">All statuses</option>
+        <option value="Not Marked" {{ 'selected' if status_filter == 'Not Marked' }}>Not Marked</option>
+        {% for s in statuses %}
+        <option value="{{ s }}" {{ 'selected' if status_filter == s }}>{{ s }}</option>
+        {% endfor %}
+      </select>
+      {% if department_id or status_filter %}
+      <a class="btn sm ghost" href="{{ url_for('attendance.daily', date=date_str) }}">Clear filters</a>
+      {% endif %}
+    </form>
+  </div>
+  <div class="table-wrap">
+    {% if rows %}
+    <table class="dt">
+      <thead><tr>
+        <th>Employee</th><th>Department</th><th>Status</th><th>Check In</th><th>Check Out</th>
+        <th>Late (min)</th><th>OT (min)</th><th>Hours</th><th style="text-align:right">Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>
+            <div class="cell-person">
+              <div class="avatar">{{ (r.first_name ~ ' ' ~ r.last_name)|initials }}</div>
+              <div><div class="n">{{ r.first_name }} {{ r.last_name }}</div><div class="s">{{ r.employee_code }}</div></div>
+            </div>
+          </td>
+          <td>{{ r.department_name or '—' }}</td>
+          <td>{% if r.status %}<span class="badge {{ status_badge_class(r.status) }}">{{ r.status }}</span>{% else %}<span class="badge gray">Not marked</span>{% endif %}</td>
+          <td>{{ r.check_in|fmt_time if r.check_in else '—' }}</td>
+          <td>{{ r.check_out|fmt_time if r.check_out else '—' }}</td>
+          <td>{{ r.late_minutes or 0 }}</td>
+          <td>{{ r.overtime_minutes or 0 }}</td>
+          <td>{{ r.work_hours or 0 }}</td>
+          <td>
+            {% if can_edit %}
+            <div class="row-actions">
+              <button class="btn sm" type="button" onclick="openMarkRow({{ r.employee_id }}, '{{ r.first_name }} {{ r.last_name }}', '{{ r.status or '' }}', '{{ r.check_in or '' }}', '{{ r.check_out or '' }}')">{{ ic.icon('pencil',13) }} Mark</button>
+            </div>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="ic">{{ ic.icon('clock', 34) }}</div>
+      <p>No employees match these filters.</p>
+    </div>
+    {% endif %}
+  </div>
+  <div class="card-pad"></div>
+</div>
+
+{% if can_edit %}
+<div class="modal-bg" id="mark-modal">
+  <div class="modal">
+    <h3 id="mark-modal-title">Mark attendance</h3>
+    <form method="post" action="{{ url_for('attendance.mark') }}">
+      <input type="hidden" name="employee_id" id="mark-employee-id">
+      <input type="hidden" name="date" value="{{ date_str }}">
+      <input type="hidden" name="next" value="{{ request.full_path }}">
+      <div class="form-grid" style="grid-template-columns:1fr">
+        <div class="field">
+          <label>Status</label>
+          <select name="status" id="mark-status">
+            {% for s in statuses %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Check In</label>
+          <input type="time" name="check_in" id="mark-check-in">
+        </div>
+        <div class="field">
+          <label>Check Out</label>
+          <input type="time" name="check_out" id="mark-check-out">
+        </div>
+      </div>
+      <div class="actions" style="margin-top:16px">
+        <button type="button" class="btn" onclick="closeMarkModal()">Cancel</button>
+        <button type="submit" class="btn primary">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+function openMarkRow(empId, name, status, checkIn, checkOut) {
+  document.getElementById('mark-modal-title').textContent = 'Mark attendance — ' + name;
+  document.getElementById('mark-employee-id').value = empId;
+  document.getElementById('mark-status').value = status || 'Present';
+  document.getElementById('mark-check-in').value = checkIn || '';
+  document.getElementById('mark-check-out').value = checkOut || '';
+  document.getElementById('mark-modal').classList.add('show');
+}
+function closeMarkModal() {
+  document.getElementById('mark-modal').classList.remove('show');
+}
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,15 @@
+<div class="pagination">
+  <span>Page {{ page }} of {{ pages }} &middot; {{ total }} total</span>
+  <div class="pages">
+    {% set qs = request.args.to_dict() %}
+    {% if page > 1 %}
+      {% set _ = qs.update({'page': page-1}) %}
+      <a href="?{{ qs|urlencode }}">Prev</a>
+    {% endif %}
+    <span class="current">{{ page }}</span>
+    {% if page < pages %}
+      {% set _ = qs.update({'page': page+1}) %}
+      <a href="?{{ qs|urlencode }}">Next</a>
+    {% endif %}
+  </div>
+</div>

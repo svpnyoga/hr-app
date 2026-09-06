@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Give Recognition{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('engagement.recognitions_list') }}">Recognitions</a> / New</div>
+<div class="page-head"><div><h1>Give Recognition</h1></div></div>
+
+<div class="card card-pad" style="max-width:640px">
+  <form method="post">
+    <div class="form-grid">
+      <div class="field full">
+        <label>Employee <span class="req">*</span></label>
+        <select name="employee_id" required>
+          <option value="">— Select —</option>
+          {% for eid, ename in employees %}<option value="{{ eid }}">{{ ename }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Category</label>
+        <select name="category">
+          {% for c in categories %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field full">
+        <label>Title <span class="req">*</span></label>
+        <input type="text" name="title" required placeholder="e.g. Above and beyond on the Q3 launch">
+      </div>
+      <div class="field full">
+        <label>Message</label>
+        <textarea name="message" placeholder="Say a few words..."></textarea>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Post Recognition</button>
+      <a class="btn" href="{{ url_for('engagement.recognitions_list') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

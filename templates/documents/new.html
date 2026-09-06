@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Upload Document{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('documents.list_view') }}">HR Documents</a> / Upload</div>
+<div class="page-head"><div><h1>Upload HR Document</h1></div></div>
+
+<div class="card card-pad" style="max-width:800px">
+  <form method="post" enctype="multipart/form-data">
+    <div class="form-grid">
+      <div class="field">
+        <label>Document type <span class="req">*</span></label>
+        <select name="document_type_id" required>
+          <option value="">— Select —</option>
+          {% for t in document_types %}
+          <option value="{{ t.id }}">{{ t.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Title <span class="req">*</span></label>
+        <input type="text" name="title" required placeholder="e.g. Passport copy, Company POSH Policy">
+      </div>
+      <div class="field">
+        <label>Employee</label>
+        <select name="employee_id">
+          <option value="">Company-wide (no specific employee)</option>
+          {% for e in employees %}
+          <option value="{{ e.id }}">{{ e.name }}</option>
+          {% endfor %}
+        </select>
+        <div class="help-text">Leave blank for a company-wide policy document visible to everyone.</div>
+      </div>
+      <div class="field">
+        <label>Expiry date</label>
+        <input type="date" name="expiry_date">
+      </div>
+      <div class="field full">
+        <label>File</label>
+        <input type="file" name="file">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">{{ ic.icon('send',15) }} Upload</button>
+      <a class="btn" href="{{ url_for('documents.list_view') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

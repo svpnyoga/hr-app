@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Dashboard{% endblock %} · {{ company.company_name if company else 'Enterprise HR' }}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script>
+(function(){ var t = localStorage.getItem('hr-theme'); if(t) document.documentElement.setAttribute('data-theme', t); })();
+</script>
+</head>
+<body>
+{% import "partials/icons.html" as ic %}
+{% set ep = request.endpoint or '' %}
+<div class="app">
+  <div class="overlay" onclick="toggleSidebar()"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><span class="logo-dot">{{ ic.icon('shield', 16) }}</span> <span>{{ company.company_name if company else 'Enterprise HR' }}</span></div>
+    <nav>
+      <div class="nav-item {{ 'active' if ep=='dashboard.index' }}" onclick="location.href='{{ url_for('dashboard.index') }}'">
+        {{ ic.icon('grid') }} <span>Dashboard</span>
+      </div>
+      <div class="nav-item {{ 'active' if ep=='dashboard.my_approvals' }}" onclick="location.href='{{ url_for('dashboard.my_approvals') }}'">
+        {{ ic.icon('clipboard-check') }} <span>My Approvals</span>
+      </div>
+
+      {% if has_permission('employees.employees.view') %}
+      <div class="nav-section">People</div>
+      <div class="nav-item {{ 'active' if ep.startswith('employees.') }}" onclick="location.href='{{ url_for('employees.list_view') }}'">{{ ic.icon('id-card') }} <span>Employees</span></div>
+      {% endif %}
+
+      {% if has_permission('attendance.attendance.view') %}
+      <div class="nav-section">Time &amp; Leave</div>
+      <div class="nav-item {{ 'active' if ep.startswith('attendance.') }}" onclick="location.href='{{ url_for('attendance.daily') }}'">{{ ic.icon('clock') }} <span>Attendance</span></div>
+      {% endif %}
+      {% if has_permission('leave.requests.view') %}
+      <div class="nav-item {{ 'active' if ep.startswith('leave.') }}" onclick="location.href='{{ url_for('leave.requests_list') }}'">{{ ic.icon('umbrella') }} <span>Leave</span></div>
+      {% endif %}
+
+      {% if has_permission('payroll.payslips.view') or has_permission('payroll.runs.view') %}
+      <div class="nav-section">Payroll</div>
+      <div class="nav-item {{ 'active' if ep.startswith('payroll.') }}" onclick="location.href='{{ url_for('payroll.runs_list') }}'">{{ ic.icon('wallet') }} <span>Payroll</span></div>
+      {% endif %}
+
+      {% if has_permission('recruitment.requisitions.view') %}
+      <div class="nav-section">Talent</div>
+      <div class="nav-item {{ 'active' if ep.startswith('recruitment.') }}" onclick="location.href='{{ url_for('recruitment.requisitions_list') }}'">{{ ic.icon('briefcase') }} <span>Recruitment</span></div>
+      {% endif %}
+      {% if has_permission('performance.goals.view') %}
+      <div class="nav-item {{ 'active' if ep.startswith('performance.') }}" onclick="location.href='{{ url_for('performance.cycles_list') }}'">{{ ic.icon('target') }} <span>Performance</span></div>
+      {% endif %}
+      {% if has_permission('engagement.surveys.view') %}
+      <div class="nav-item {{ 'active' if ep.startswith('engagement.') }}" onclick="location.href='{{ url_for('engagement.surveys_list') }}'">{{ ic.icon('heart') }} <span>Engagement</span></div>
+      {% endif %}
+      {% if has_permission('learning.courses.view') %}
+      <div class="nav-item {{ 'active' if ep.startswith('learning.') }}" onclick="location.href='{{ url_for('learning.courses_list') }}'">{{ ic.icon('graduation') }} <span>Learning</span></div>
+      {% endif %}
+
+      {% if has_permission('field.visits.view') %}
+      <div class="nav-section">Operations</div>
+      <div class="nav-item {{ 'active' if ep.startswith('field.') }}" onclick="location.href='{{ url_for('field.visits_list') }}'">{{ ic.icon('map-pin') }} <span>Field Tracking</span></div>
+      {% endif %}
+      {% if has_permission('claims.claims.view') %}
+      <div class="nav-item {{ 'active' if ep.startswith('claims.') }}" onclick="location.href='{{ url_for('claims.claims_list') }}'">{{ ic.icon('credit-card') }} <span>Claims</span></div>
+      {% endif %}
+      {% if has_permission('documents.documents.view') %}
+      <div class="nav-item {{ 'active' if ep.startswith('documents.') }}" onclick="location.href='{{ url_for('documents.list_view') }}'">{{ ic.icon('folder') }} <span>HR Documents</span></div>
+      {% endif %}
+      {% if has_permission('crm.customers.view') %}
+      <div class="nav-item {{ 'active' if ep.startswith('crm.') }}" onclick="location.href='{{ url_for('crm.customers_list') }}'">{{ ic.icon('handshake') }} <span>CRM</span></div>
+      {% endif %}
+
+      {% if has_permission('reports.reports.view') %}
+      <div class="nav-section">Insights</div>
+      <div class="nav-item {{ 'active' if ep.startswith('reports.') }}" onclick="location.href='{{ url_for('reports.index') }}'">{{ ic.icon('chart') }} <span>Reports</span></div>
+      {% endif %}
+      <div class="nav-item {{ 'active' if ep.startswith('notifications.') }}" onclick="location.href='{{ url_for('notifications.index') }}'">{{ ic.icon('bell') }} <span>Notifications</span></div>
+
+      {% if has_permission('admin.settings.view') or has_permission('admin.users.view') %}
+      <div class="nav-section">Administration</div>
+      <div class="nav-item {{ 'active' if ep.startswith('admin.') }}" onclick="location.href='{{ url_for('admin.settings') }}'">{{ ic.icon('cog') }} <span>Administration</span></div>
+      {% endif %}
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn sidebar-toggle" onclick="toggleSidebar()">{{ ic.icon('menu') }}</button>
+      <div class="search-box">
+        {{ ic.icon('search', 14) }}
+        <input type="text" placeholder="Search employees, requisitions, leads, documents..." oninput="onGlobalSearch(this)">
+        <div class="dropdown-menu" id="global-search-results" style="max-height:360px;overflow-y:auto"></div>
+      </div>
+      <div class="topbar-right">
+        <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme">{{ ic.icon('sun') }}</button>
+        <div class="dropdown">
+          <button class="icon-btn" data-dropdown-toggle title="Notifications">
+            {{ ic.icon('bell') }}
+            {% if unread_notifs and unread_notifs > 0 %}<span class="badge-dot"></span>{% endif %}
+          </button>
+          <div class="dropdown-menu" style="width:320px">
+            <div class="dd-title">Notifications {% if unread_notifs %}({{ unread_notifs }} unread){% endif %}</div>
+            {% for n in top_notifs %}
+            <a href="{{ n.link or url_for('notifications.index') }}" class="notif-item">
+              <div class="t">{{ n.title }}</div>
+              <div class="m">{{ n.message }}</div>
+            </a>
+            {% else %}
+            <div class="dd-title">You're all caught up.</div>
+            {% endfor %}
+            <hr><a href="{{ url_for('notifications.index') }}">View all notifications</a>
+          </div>
+        </div>
+        <div class="dropdown">
+          <div class="user-chip" data-dropdown-toggle>
+            <div class="avatar">{% if g.employee and g.employee.photo_path %}<img src="{{ url_for('static', filename='uploads/' + g.employee.photo_path) }}">{% else %}{{ (g.user.full_name if g.user else '??')|initials }}{% endif %}</div>
+            <div style="display:flex;flex-direction:column;line-height:1.2">
+              <span style="font-weight:650;font-size:12.5px">{{ g.user.full_name if g.user else 'Guest' }}</span>
+              <span class="text-muted" style="font-size:11px">{{ g.user.role_name if g.user else '' }}</span>
+            </div>
+          </div>
+          <div class="dropdown-menu">
+            {% if g.employee %}<a href="{{ url_for('employees.view', id=g.employee.id) }}">{{ ic.icon('user',15) }} My profile</a>{% endif %}
+            <a href="{{ url_for('auth.change_password') }}">{{ ic.icon('lock',15) }} Change password</a>
+            {% if has_permission('admin.settings.view') %}<a href="{{ url_for('admin.settings') }}">{{ ic.icon('shield',15) }} Administration</a>{% endif %}
+            <hr>
+            <a href="{{ url_for('auth.logout') }}">{{ ic.icon('logout',15) }} Log out</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="flash-wrap" id="flash-wrap">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+    </div>
+
+    <main class="content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+<div class="modal-bg" id="confirm-modal">
+  <div class="modal">
+    <h3>Are you sure?</h3>
+    <p id="confirm-message">This action cannot be undone.</p>
+    <div class="actions">
+      <button class="btn" onclick="closeConfirm()">Cancel</button>
+      <button class="btn danger" onclick="proceedConfirm()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script>
+setTimeout(function(){
+  document.querySelectorAll('.flash').forEach(function(f){ f.style.transition='opacity .4s'; f.style.opacity='0'; setTimeout(function(){f.remove()}, 400); });
+}, 4500);
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

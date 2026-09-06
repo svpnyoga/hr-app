@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Visit · {{ row.customer_name }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('field.visits_list') }}">Field Visits</a> / #{{ row.id }}</div>
+<div class="page-head">
+  <div>
+    <h1>{{ row.customer_name }}</h1>
+    <div class="sub">{{ row.first_name }} {{ row.last_name }} ({{ row.employee_code }}) &middot; {{ row.visit_date|fmt_date }}</div>
+    <span class="badge {{ status_badge_class(row.status) }}">{{ row.status }}</span>
+  </div>
+</div>
+
+<div class="detail-grid">
+  <div class="card card-pad">
+    <h3 style="margin-bottom:14px">Visit details</h3>
+    <div class="kv">
+      <div class="k">Employee</div><div>{{ row.first_name }} {{ row.last_name }} ({{ row.employee_code }})</div>
+      <div class="k">Visit date</div><div>{{ row.visit_date|fmt_date }}</div>
+      <div class="k">Purpose</div><div>{{ row.purpose or '—' }}</div>
+      <div class="k">Check-in time</div><div>{{ row.check_in_time|fmt_datetime if row.check_in_time else '—' }}</div>
+      <div class="k">Check-in location</div><div>{{ row.check_in_location or '—' }}</div>
+      <div class="k">Check-out time</div><div>{{ row.check_out_time|fmt_datetime if row.check_out_time else '—' }}</div>
+      <div class="k">Check-out location</div><div>{{ row.check_out_location or '—' }}</div>
+      <div class="k">Travel distance</div><div>{{ row.travel_distance_km ~ ' km' if row.travel_distance_km is not none else '—' }}</div>
+      <div class="k">Remarks</div><div>{{ row.remarks or '—' }}</div>
+    </div>
+  </div>
+  <div class="card card-pad">
+    <h3 style="margin-bottom:10px">Photo</h3>
+    {% if row.photo_path %}
+    <div class="media-card">
+      <img src="{{ url_for('static', filename='uploads/' + row.photo_path) }}">
+      <div class="cap"><b>Visit photo</b></div>
+    </div>
+    {% else %}
+    <p class="text-muted" style="font-size:12.5px">No photo attached.</p>
+    {% endif %}
+  </div>
+</div>
+
+{% if can_act and row.status == 'Planned' %}
+<div class="card card-pad" style="margin-top:18px;max-width:640px">
+  <h3 style="margin-bottom:12px">{{ ic.icon('map-pin',16) }} Check in</h3>
+  <form method="post" action="{{ url_for('field.checkin', id=row.id) }}" enctype="multipart/form-data">
+    <div class="form-grid">
+      <div class="field full">
+        <label>Check-in location</label>
+        <input type="text" name="check_in_location" placeholder="e.g. Client office, 5th Ave">
+      </div>
+      <div class="field full">
+        <label>Photo (optional)</label>
+        <input type="file" name="photo" accept="image/*" onchange="previewFiles(this, 'checkin-photo-preview')">
+        <div class="media-grid" id="checkin-photo-preview" style="margin-top:8px"></div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">{{ ic.icon('map-pin',15) }} Check in</button>
+    </div>
+  </form>
+</div>
+{% endif %}
+
+{% if can_act and row.status == 'In Progress' %}
+<div class="card card-pad" style="margin-top:18px;max-width:640px">
+  <h3 style="margin-bottom:12px">{{ ic.icon('check',16) }} Check out</h3>
+  <form method="post" action="{{ url_for('field.checkout', id=row.id) }}">
+    <div class="form-grid">
+      <div class="field full">
+        <label>Check-out location</label>
+        <input type="text" name="check_out_location" placeholder="e.g. Client office, 5th Ave">
+      </div>
+      <div class="field">
+        <label>Travel distance (km)</label>
+        <input type="number" step="0.1" min="0" name="travel_distance_km">
+      </div>
+      <div class="field full">
+        <label>Remarks</label>
+        <textarea name="remarks" placeholder="Visit summary / outcome"></textarea>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">{{ ic.icon('check',15) }} Check out</button>
+    </div>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

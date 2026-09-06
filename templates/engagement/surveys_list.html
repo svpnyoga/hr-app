@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Surveys{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Surveys</h1>
+    <div class="sub">{{ surveys|length }} survey{{ 's' if surveys|length != 1 else '' }}</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    {% if can_create %}
+    <a class="btn primary" href="{{ url_for('engagement.survey_new') }}">{{ ic.icon('plus',15) }} New Survey</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    {% if surveys %}
+    <table class="dt">
+      <thead><tr>
+        <th>Title</th><th>Type</th><th>Start</th><th>End</th><th>Status</th><th>Responses</th>
+        <th style="text-align:right">Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for s in surveys %}
+        <tr>
+          <td><a href="{{ url_for('engagement.survey_view', id=s.id) }}" style="font-weight:650">{{ s.title }}</a></td>
+          <td><span class="badge brand">{{ s.type }}</span></td>
+          <td>{{ s.start_date|fmt_date }}</td>
+          <td>{{ s.end_date|fmt_date }}</td>
+          <td><span class="badge {{ status_badge_class(s.status) }}">{{ s.status }}</span></td>
+          <td>{{ s.response_count }}</td>
+          <td>
+            <div class="row-actions">
+              <a class="btn sm btn-icon" href="{{ url_for('engagement.survey_view', id=s.id) }}" title="View">{{ ic.icon('eye',14) }}</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="ic">{{ ic.icon('heart', 34) }}</div>
+      <p>No surveys yet.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

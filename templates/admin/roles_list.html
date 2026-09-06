@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Roles &amp; Permissions{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('admin.settings') }}">Administration</a> / Roles</div>
+<div class="page-head">
+  <div>
+    <h1>Roles &amp; Permissions</h1>
+    <div class="sub">{{ rows|length }} built-in role{{ 's' if rows|length != 1 else '' }}</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="dt">
+      <thead><tr>
+        <th>Role</th><th>Description</th><th>Users</th><th>Permissions Granted</th><th style="text-align:right">Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td><span class="badge brand">{{ ic.icon('shield',12) }} {{ r.name }}</span></td>
+          <td class="text-muted">{{ r.description or '—' }}</td>
+          <td>{{ r.user_count }}</td>
+          <td>
+            {% if r.name == 'Super Admin' %}
+            <span class="badge accent">Full Access</span>
+            {% else %}
+            {{ r.perm_count }}
+            {% endif %}
+          </td>
+          <td>
+            <div class="row-actions">
+              <a class="btn sm" href="{{ url_for('admin.role_permissions', id=r.id) }}">{{ ic.icon('cog',14) }} {{ 'Edit permissions' if can_edit else 'View' }}</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

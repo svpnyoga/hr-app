@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}{{ app.candidate_name }} — {{ app.requisition_title }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('recruitment.pipeline') }}">Pipeline</a> / Application #{{ app.id }}</div>
+<div class="page-head">
+  <div>
+    <h1>{{ app.candidate_name }}</h1>
+    <span class="badge {{ status_badge_class(app.stage) }}">{{ app.stage }}</span>
+    <span class="text-muted" style="font-size:12.5px;margin-left:6px">applied to {{ app.requisition_title }} ({{ app.requisition_number }})</span>
+  </div>
+  <div style="display:flex;gap:8px">
+    <a class="btn" href="{{ url_for('recruitment.candidate_view', id=app.candidate_id) }}">{{ ic.icon('user',15) }} View candidate</a>
+    <a class="btn" href="{{ url_for('recruitment.requisition_view', id=app.requisition_id) }}">{{ ic.icon('briefcase',15) }} View requisition</a>
+  </div>
+</div>
+
+<div class="detail-grid">
+  <div class="card card-pad">
+    <h3 style="margin-bottom:14px">Details</h3>
+    <div class="kv">
+      <div class="k">Candidate</div><div>{{ app.candidate_name }}</div>
+      <div class="k">Email</div><div>{{ app.candidate_email or '—' }}</div>
+      <div class="k">Phone</div><div>{{ app.candidate_phone or '—' }}</div>
+      <div class="k">Requisition</div><div>{{ app.requisition_title }}</div>
+      <div class="k">Applied Date</div><div>{{ app.applied_date|fmt_date }}</div>
+      <div class="k">Remarks</div><div>{{ app.remarks or '—' }}</div>
+      {% if app.stage == 'Rejected' %}
+      <div class="k">Rejection Reason</div><div>{{ app.rejection_reason or '—' }}</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card card-pad">
+    <h3 style="margin-bottom:10px">Move stage</h3>
+    {% if can_edit %}
+    <form method="post" action="{{ url_for('recruitment.application_stage', id=app.id) }}" id="stage-form">
+      <div class="field">
+        <select name="stage" id="stage-select" onchange="document.getElementById('rejection-field').hidden = this.value !== 'Rejected'">
+          {% for s in stages %}<option value="{{ s }}" {{ 'selected' if app.stage==s }}>{{ s }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field" id="rejection-field" {{ 'hidden' if app.stage != 'Rejected' }} style="margin-top:8px">
+        <label>Rejection Reason</label>
+        <input type="text" name="rejection_reason" value="{{ app.rejection_reason or '' }}">
+      </div>
+      <button class="btn primary sm" type="submit" style="margin-top:10px">Update stage</button>
+    </form>
+    {% else %}
+    <p style="font-size:13px">{{ app.stage }}</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="detail-grid" style="margin-top:18px">
+  <div class="card card-pad">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h3>Interviews ({{ interviews|length }})</h3>
+      {% if can_schedule_interview %}
+      <a class="btn sm" href="{{ url_for('recruitment.interview_new', application_id=app.id) }}">{{ ic.icon('plus',14) }} Schedule interview</a>
+      {% endif %}
+    </div>
+    {% if interviews %}
+    {% for i in interviews %}
+    <div class="card-pad" style="border:1px solid var(--border);border-radius:8px;margin-bottom:10px;padding:12px">
+      <div style="display:flex;justify-content:space-between">
+        <strong>{{ i.round_name }}</strong>
+        {% if i.recommendation %}<span class="badge {{ 'green' if i.recommendation in ('Strong Yes','Yes') else ('red' if i.recommendation in ('No','Strong No') else 'gray') }}">{{ i.recommendation }}</span>{% endif %}
+      </div>
+      <div class="kv" style="grid-template-columns:120px 1fr;margin-top:8px">
+        <div class="k">Scheduled</div><div>{{ i.scheduled_at|fmt_datetime }}</div>
+        <div class="k">Interviewer</div><div>{{ i.interviewer_name or '—' }}</div>
+        <div class="k">Mode</div><div>{{ i.mode }}</div>
+        {% if i.rating %}<div class="k">Rating</div><div>{{ i.rating }} / 5</div>{% endif %}
+        {% if i.feedback %}<div class="k">Feedback</div><div>{{ i.feedback }}</div>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty-state"><div class="ic">{{ ic.icon('clipboard-check', 28) }}</div><p>No interviews scheduled yet.</p></div>
+    {% endif %}
+  </div>
+
+  <div class="card card-pad">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h3>Offers ({{ offers|length }})</h3>
+      {% if can_create_offer %}
+      <a class="btn sm" href="{{ url_for('recruitment.offer_new', application_id=app.id) }}">{{ ic.icon('plus',14) }} Create offer</a>
+      {% endif %}
+    </div>
+    {% if offers %}
+    {% for o in offers %}
+    <div class="card-pad" style="border:1px solid var(--border);border-radius:8px;margin-bottom:10px;padding:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong>{{ o.designation_title or 'Offer' }} #{{ o.id }}</strong>
+        <span class="badge {{ status_badge_class(o.status) }}">{{ o.status }}</span>
+      </div>
+      <div class="kv" style="grid-template-columns:120px 1fr;margin-top:8px">
+        <div class="k">Offer Date</div><div>{{ o.offer_date|fmt_date }}</div>
+        <div class="k">CTC</div><div>{{ o.ctc|money if o.ctc is not none else '—' }}</div>
+        <div class="k">Joining Date</div><div>{{ o.joining_date|fmt_date }}</div>
+      </div>
+      {% if can_edit_offer %}
+      <form method="post" action="{{ url_for('recruitment.offer_status', id=o.id) }}" style="display:flex;gap:8px;margin-top:10px">
+        <select name="status" style="flex:1">
+          {% for s in offer_statuses %}<option value="{{ s }}" {{ 'selected' if o.status==s }}>{{ s }}</option>{% endfor %}
+        </select>
+        <button class="btn sm" type="submit">Update</button>
+      </form>
+      {% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty-state"><div class="ic">{{ ic.icon('wallet', 28) }}</div><p>No offers created yet.</p></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

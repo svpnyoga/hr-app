@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Candidates{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Candidates</h1>
+    <div class="sub">{{ total }} candidate{{ 's' if total != 1 }} total</div>
+  </div>
+  {% if can_create %}
+  <a class="btn primary" href="{{ url_for('recruitment.candidate_new') }}">{{ ic.icon('plus',15) }} New Candidate</a>
+  {% endif %}
+</div>
+
+<div class="card">
+  <div class="card-pad" style="padding-bottom:0">
+    <form class="toolbar" method="get">
+      <div class="search-box">
+        {{ ic.icon('search',13) }}
+        <input type="text" name="q" value="{{ q }}" placeholder="Search name, email, phone, company...">
+      </div>
+      <button class="btn sm" type="submit">Search</button>
+      {% if q %}<a class="btn sm ghost" href="{{ url_for('recruitment.candidates_list') }}">Clear</a>{% endif %}
+    </form>
+  </div>
+  <div class="table-wrap">
+    {% if rows %}
+    <table class="dt">
+      <thead><tr>
+        <th>Candidate</th><th>Email</th><th>Phone</th><th>Experience</th>
+        <th>Current Company</th><th>Expected Salary</th><th style="text-align:right">Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>
+            <div style="font-weight:650">{{ r.full_name }}</div>
+            <div class="text-muted" style="font-size:11.5px">{{ r.candidate_code }}</div>
+          </td>
+          <td>{{ r.email or '—' }}</td>
+          <td>{{ r.phone or '—' }}</td>
+          <td>{{ (r.total_experience_years ~ ' yrs') if r.total_experience_years is not none else '—' }}</td>
+          <td>{{ r.current_company or '—' }}</td>
+          <td>{{ r.expected_salary|money if r.expected_salary is not none else '—' }}</td>
+          <td>
+            <div class="row-actions">
+              <a class="btn sm btn-icon" href="{{ url_for('recruitment.candidate_view', id=r.id) }}" title="View">{{ ic.icon('eye',14) }}</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="ic">{{ ic.icon('users', 34) }}</div>
+      <p>No candidates found{{ ' for "%s"'|format(q) if q else '' }}.</p>
+    </div>
+    {% endif %}
+  </div>
+  <div class="card-pad" style="padding-top:12px">
+    {% include "partials/pagination.html" %}
+  </div>
+</div>
+{% endblock %}

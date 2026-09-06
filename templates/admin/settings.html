@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Administration{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Administration</h1>
+    <div class="sub">Company profile, users, roles &amp; permissions, master data and the audit trail.</div>
+  </div>
+</div>
+
+<div class="grid grid-4" style="margin-bottom:20px">
+  <a class="stat-card" href="{{ url_for('admin.users_list') }}">
+    <div class="top">
+      <span class="label">Users</span>
+      <span class="icon" style="background:var(--blue-bg);color:var(--blue)">{{ ic.icon('users',17) }}</span>
+    </div>
+    <div class="value">{{ user_count }}</div>
+  </a>
+  <a class="stat-card" href="{{ url_for('admin.roles_list') }}">
+    <div class="top">
+      <span class="label">Roles</span>
+      <span class="icon" style="background:var(--indigo-bg);color:var(--indigo)">{{ ic.icon('shield',17) }}</span>
+    </div>
+    <div class="value">{{ role_count }}</div>
+  </a>
+  <a class="stat-card" href="{{ url_for('admin.departments_list') }}">
+    <div class="top">
+      <span class="label">Master Data</span>
+      <span class="icon" style="background:var(--accent-bg);color:var(--accent-600)">{{ ic.icon('package',17) }}</span>
+    </div>
+    <div class="value">{{ masterdata_links|length }} sections</div>
+  </a>
+  <a class="stat-card" href="{{ url_for('admin.audit_log') }}">
+    <div class="top">
+      <span class="label">Audit Log</span>
+      <span class="icon" style="background:var(--green-bg);color:var(--green)">{{ ic.icon('history',17) }}</span>
+    </div>
+    <div class="value">{{ audit_count }}</div>
+  </a>
+</div>
+
+<div class="card" style="margin-bottom:20px">
+  <div class="card-head">
+    <h3>{{ ic.icon('package',15) }} Master Data</h3>
+  </div>
+  <div class="card-pad">
+    <div class="grid grid-4">
+      {% for key, label, icon_name in masterdata_links %}
+      <a class="btn" style="justify-content:flex-start" href="{{ url_for('admin.' + key + '_list') }}">
+        {{ ic.icon(icon_name, 15) }} {{ label }}
+        <span class="badge gray" style="margin-left:auto">{{ counts[key] }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h3>{{ ic.icon('building',15) }} Company Settings</h3>
+  </div>
+  <div class="card-pad">
+    {% if not can_edit %}
+    <div class="alert info">You have view-only access to company settings.</div>
+    {% endif %}
+    <form method="post" enctype="multipart/form-data">
+      <div class="form-grid">
+        <div class="field full">
+          <label>Company Logo</label>
+          <div style="display:flex;align-items:center;gap:14px">
+            <div class="avatar lg" style="border-radius:10px">
+              {% if row.logo_path %}<img id="logo-preview" src="{{ url_for('static', filename='uploads/' + row.logo_path) }}">
+              {% else %}<img id="logo-preview" src="" style="display:none">{{ ic.icon('building', 26) }}{% endif %}
+            </div>
+            {% if can_edit %}
+            <input type="file" name="logo" accept="image/*" onchange="previewSingleFile(this,'logo-preview'); document.getElementById('logo-preview').style.display='block'">
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Company Name <span class="req">*</span></label>
+          <input type="text" name="company_name" value="{{ row.company_name or '' }}" required {{ 'disabled' if not can_edit }}>
+        </div>
+        <div class="field">
+          <label>Currency Symbol</label>
+          <input type="text" name="currency_symbol" value="{{ row.currency_symbol or '' }}" {{ 'disabled' if not can_edit }}>
+        </div>
+
+        <div class="field full">
+          <label>Address</label>
+          <input type="text" name="address" value="{{ row.address or '' }}" {{ 'disabled' if not can_edit }}>
+        </div>
+        <div class="field">
+          <label>City</label>
+          <input type="text" name="city" value="{{ row.city or '' }}" {{ 'disabled' if not can_edit }}>
+        </div>
+        <div class="field">
+          <label>State</label>
+          <input type="text" name="state" value="{{ row.state or '' }}" {{ 'disabled' if not can_edit }}>
+        </div>
+        <div class="field">
+          <label>Country</label>
+          <input type="text" name="country" value="{{ row.country or '' }}" {{ 'disabled' if not can_edit }}>
+        </div>
+        <div class="field">
+          <label>Pincode</label>
+          <input type="text" name="pincode" value="{{ row.pincode or '' }}" {{ 'disabled' if not can_edit }}>
+        </div>
+
+        <div class="field">
+          <label>Phone</label>
+          <input type="tel" name="phone" value="{{ row.phone or '' }}" {{ 'disabled' if not can_edit }}>
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" name="email" value="{{ row.email or '' }}" {{ 'disabled' if not can_edit }}>
+        </div>
+        <div class="field">
+          <label>Website</label>
+          <input type="text" name="website" value="{{ row.website or '' }}" {{ 'disabled' if not can_edit }}>
+        </div>
+
+        <div class="field">
+          <label>GSTIN</label>
+          <input type="text" name="gstin" value="{{ row.gstin or '' }}" {{ 'disabled' if not can_edit }}>
+        </div>
+        <div class="field">
+          <label>PAN</label>
+          <input type="text" name="pan" value="{{ row.pan or '' }}" {{ 'disabled' if not can_edit }}>
+        </div>
+        <div class="field">
+          <label>Fiscal Year Start Month</label>
+          <select name="fiscal_year_start_month" {{ 'disabled' if not can_edit }}>
+            {% for m in months %}
+            <option value="{{ m }}" {{ 'selected' if row.fiscal_year_start_month==m }}>{{ ['January','February','March','April','May','June','July','August','September','October','November','December'][m-1] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      {% if can_edit %}
+      <div class="form-actions">
+        <button class="btn primary" type="submit">Save changes</button>
+      </div>
+      {% endif %}
+    </form>
+  </div>
+</div>
+{% endblock %}

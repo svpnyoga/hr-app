@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}{{ 'Edit Employee' if is_edit else 'New Employee' }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('employees.list_view') }}">Employees</a> / {{ 'Edit' if is_edit else 'New' }}</div>
+<div class="page-head">
+  <div>
+    <h1>{% if is_edit %}Edit {{ row.first_name }} {{ row.last_name }}{% else %}New Employee{% endif %}</h1>
+    {% if is_edit %}<div class="sub">{{ emp_code }}</div>{% endif %}
+  </div>
+</div>
+
+<div class="card card-pad" style="max-width:980px">
+  <form method="post" enctype="multipart/form-data">
+
+    <fieldset class="form-section-box">
+      <legend>Personal Information</legend>
+      <div class="form-grid cols-3">
+        <div class="field full" style="flex-direction:row;align-items:center;gap:16px">
+          <div class="avatar lg">
+            {% if row.photo_path %}<img src="{{ url_for('static', filename='uploads/' + row.photo_path) }}">
+            {% else %}{{ ((row.first_name or '?') ~ ' ' ~ (row.last_name or ''))|initials }}{% endif %}
+          </div>
+          <div class="field" style="flex:1">
+            <label>Photo</label>
+            <input type="file" name="photo" accept="image/*">
+            <div class="help-text">{{ 'Upload to replace the current photo.' if is_edit else 'Optional profile photo.' }}</div>
+          </div>
+        </div>
+        <div class="field"><label>First Name <span class="req">*</span></label><input type="text" name="first_name" value="{{ row.first_name or '' }}" required></div>
+        <div class="field"><label>Last Name <span class="req">*</span></label><input type="text" name="last_name" value="{{ row.last_name or '' }}" required></div>
+        <div class="field">
+          <label>Gender</label>
+          <select name="gender">
+            <option value="">— Select —</option>
+            {% for opt in genders %}<option value="{{ opt }}" {{ 'selected' if row.gender==opt }}>{{ opt }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field"><label>Date of Birth</label><input type="date" name="dob" value="{{ row.dob or '' }}"></div>
+        <div class="field">
+          <label>Marital Status</label>
+          <select name="marital_status">
+            <option value="">— Select —</option>
+            {% for opt in marital_statuses %}<option value="{{ opt }}" {{ 'selected' if row.marital_status==opt }}>{{ opt }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Blood Group</label>
+          <select name="blood_group">
+            <option value="">— Select —</option>
+            {% for opt in blood_groups %}<option value="{{ opt }}" {{ 'selected' if row.blood_group==opt }}>{{ opt }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field"><label>Personal Email</label><input type="email" name="personal_email" value="{{ row.personal_email or '' }}"></div>
+        <div class="field"><label>Personal Phone</label><input type="tel" name="personal_phone" value="{{ row.personal_phone or '' }}"></div>
+        <div class="field"><label>Emergency Contact Name</label><input type="text" name="emergency_contact_name" value="{{ row.emergency_contact_name or '' }}"></div>
+        <div class="field"><label>Emergency Contact Phone</label><input type="tel" name="emergency_contact_phone" value="{{ row.emergency_contact_phone or '' }}"></div>
+      </div>
+    </fieldset>
+
+    <fieldset class="form-section-box">
+      <legend>Employment Information</legend>
+      <div class="form-grid cols-3">
+        <div class="field">
+          <label>Department</label>
+          <select name="department_id">
+            <option value="">— Select —</option>
+            {% for d in departments %}<option value="{{ d.id }}" {{ 'selected' if row.department_id==d.id }}>{{ d.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Designation</label>
+          <select name="designation_id">
+            <option value="">— Select —</option>
+            {% for d in designations %}<option value="{{ d.id }}" {{ 'selected' if row.designation_id==d.id }}>{{ d.title }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Location</label>
+          <select name="location_id">
+            <option value="">— Select —</option>
+            {% for l in locations %}<option value="{{ l.id }}" {{ 'selected' if row.location_id==l.id }}>{{ l.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Reporting Manager</label>
+          <select name="reporting_manager_id">
+            <option value="">— None —</option>
+            {% for m in managers %}<option value="{{ m.id }}" {{ 'selected' if row.reporting_manager_id==m.id }}>{{ m.first_name }} {{ m.last_name }} ({{ m.employee_code }})</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Employment Type <span class="req">*</span></label>
+          <select name="employment_type" required>
+            {% for opt in employment_types %}<option value="{{ opt }}" {{ 'selected' if (row.employment_type==opt) or (not row and opt=='Full-time') }}>{{ opt }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Employment Status <span class="req">*</span></label>
+          <select name="employment_status" required>
+            {% for opt in employment_statuses %}<option value="{{ opt }}" {{ 'selected' if (row.employment_status==opt) or (not row and opt=='Active') }}>{{ opt }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field"><label>Date of Joining</label><input type="date" name="date_of_joining" value="{{ row.date_of_joining or '' }}"></div>
+        <div class="field"><label>Date of Confirmation</label><input type="date" name="date_of_confirmation" value="{{ row.date_of_confirmation or '' }}"></div>
+        <div class="field"><label>Date of Exit</label><input type="date" name="date_of_exit" value="{{ row.date_of_exit or '' }}"></div>
+        <div class="field"><label>Work Email</label><input type="email" name="work_email" value="{{ row.work_email or '' }}"></div>
+        <div class="field"><label>Work Phone</label><input type="tel" name="work_phone" value="{{ row.work_phone or '' }}"></div>
+      </div>
+    </fieldset>
+
+    <fieldset class="form-section-box">
+      <legend>Contact &amp; Address</legend>
+      <div class="form-grid">
+        <div class="field full"><label>Current Address</label><textarea name="current_address">{{ row.current_address or '' }}</textarea></div>
+        <div class="field full"><label>Permanent Address</label><textarea name="permanent_address">{{ row.permanent_address or '' }}</textarea></div>
+        <div class="field"><label>City</label><input type="text" name="city" value="{{ row.city or '' }}"></div>
+        <div class="field"><label>State</label><input type="text" name="state" value="{{ row.state or '' }}"></div>
+        <div class="field"><label>Country</label><input type="text" name="country" value="{{ row.country or '' }}"></div>
+        <div class="field"><label>Pincode</label><input type="text" name="pincode" value="{{ row.pincode or '' }}"></div>
+      </div>
+    </fieldset>
+
+    <fieldset class="form-section-box">
+      <legend>Bank &amp; Statutory</legend>
+      <div class="form-grid cols-3">
+        <div class="field"><label>Bank Name</label><input type="text" name="bank_name" value="{{ row.bank_name or '' }}"></div>
+        <div class="field"><label>Bank Account No.</label><input type="text" name="bank_account_no" value="{{ row.bank_account_no or '' }}"></div>
+        <div class="field"><label>IFSC / Routing Code</label><input type="text" name="bank_ifsc" value="{{ row.bank_ifsc or '' }}"></div>
+        <div class="field"><label>PAN Number</label><input type="text" name="pan_number" value="{{ row.pan_number or '' }}"></div>
+        <div class="field"><label>Aadhaar Number</label><input type="text" name="aadhaar_number" value="{{ row.aadhaar_number or '' }}"></div>
+        <div class="field"><label>UAN Number</label><input type="text" name="uan_number" value="{{ row.uan_number or '' }}"></div>
+        <div class="field"><label>PF Number</label><input type="text" name="pf_number" value="{{ row.pf_number or '' }}"></div>
+      </div>
+    </fieldset>
+
+    <div class="form-actions">
+      <button class="btn primary" type="submit">{{ 'Save changes' if is_edit else 'Create Employee' }}</button>
+      {% if is_edit %}
+      <a class="btn" href="{{ url_for('employees.view', id=emp_id) }}">Cancel</a>
+      {% else %}
+      <a class="btn" href="{{ url_for('employees.list_view') }}">Cancel</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

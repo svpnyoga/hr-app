@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}{{ row.claim_number }}{% endblock %}
+{% block content %}
+<style>
+.claim-stepper{display:flex;align-items:flex-start;gap:0;overflow-x:auto;padding:6px 0}
+.cs-step{display:flex;flex-direction:column;align-items:center;min-width:96px;flex-shrink:0}
+.cs-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:var(--surface-2);color:var(--text-faint);border:2px solid var(--border)}
+.cs-step.done .cs-dot{background:var(--green);border-color:var(--green);color:#fff}
+.cs-step.current .cs-dot{background:var(--brand-500);border-color:var(--brand-500);color:#fff}
+.cs-step.rejected .cs-dot{background:var(--red);border-color:var(--red);color:#fff}
+.cs-label{font-size:11px;color:var(--text-muted);margin-top:6px;text-align:center;max-width:100px}
+.cs-step.done .cs-label,.cs-step.current .cs-label{color:var(--text);font-weight:650}
+.cs-line{flex:1;height:2px;background:var(--border);margin-top:13px;min-width:20px}
+.cs-line.done{background:var(--green)}
+</style>
+<div class="breadcrumb"><a href="{{ url_for('claims.claims_list') }}">Expense Claims</a> / {{ row.claim_number }}</div>
+<div class="page-head">
+  <div>
+    <h1>{{ row.claim_number }}</h1>
+    <div class="sub">{{ row.employee_name }} ({{ row.employee_code }}) &middot; {{ row.claim_type_name }}</div>
+  </div>
+  <div class="actions">
+    <span class="badge {{ status_badge_class(row.status) }}" style="font-size:13px;padding:6px 14px">{{ row.status }}</span>
+  </div>
+</div>
+
+<div class="card card-pad" style="margin-bottom:18px">
+  {% if row.status == 'Rejected' %}
+  <div class="alert" style="background:var(--red-bg);color:var(--red);border-color:var(--red)">
+    {{ ic.icon('close',15) }} This claim was rejected.
+    {% if row.remarks %} Reason: {{ row.remarks }}{% endif %}
+  </div>
+  {% else %}
+  <div class="claim-stepper">
+    {% for step in flow %}
+    <div class="cs-step {{ 'done' if loop.index0 < step_index else '' }} {{ 'current' if loop.index0 == step_index else '' }}">
+      <div class="cs-dot">{% if loop.index0 < step_index %}{{ ic.icon('check', 14) }}{% else %}{{ loop.index }}{% endif %}</div>
+      <div class="cs-label">{{ step }}</div>
+    </div>
+    {% if not loop.last %}<div class="cs-line {{ 'done' if loop.index0 < step_index else '' }}"></div>{% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+<div class="detail-grid">
+  <div class="card card-pad">
+    <h3 style="margin-bottom:14px">Claim details</h3>
+    <div class="kv">
+      <div class="k">Expense date</div><div>{{ row.expense_date|fmt_date }}</div>
+      <div class="k">Amount</div><div style="font-weight:700">{{ row.amount|money }}</div>
+      <div class="k">Project / Department</div><div>{{ row.project_or_department or '—' }}</div>
+      <div class="k">Description</div><div>{{ row.description or '—' }}</div>
+      <div class="k">Receipt</div>
+      <div>
+        {% if row.receipt_path %}
+        <a class="btn sm" href="{{ url_for('static', filename='uploads/' + row.receipt_path) }}" target="_blank">{{ ic.icon('download',13) }} View receipt</a>
+        {% else %}—{% endif %}
+      </div>
+      <div class="k">Manager</div><div>{{ row.manager_name or '—' }}</div>
+      <div class="k">Approved at</div><div>{{ row.approved_at|fmt_datetime }}</div>
+      <div class="k">Paid at</div><div>{{ row.paid_at|fmt_datetime }}</div>
+    </div>
+
+    {% if next_action or can_reject %}
+    <div class="form-actions">
+      {% if next_action %}
+      <form method="post" action="{{ url_for('claims.claim_status', id=row.id) }}" style="display:inline">
+        <input type="hidden" name="status" value="{{ next_action[0] }}">
+        <button class="btn {{ next_action[2] }}" type="submit">{{ ic.icon('check',15) }} {{ next_action[1] }}</button>
+      </form>
+      {% endif %}
+      {% if can_reject %}
+      <form method="post" action="{{ url_for('claims.claim_status', id=row.id) }}" style="display:inline"
+            onsubmit="return confirmDelete(this, 'Reject claim {{ row.claim_number }}? This cannot be undone.')">
+        <input type="hidden" name="status" value="Rejected">
+        <button class="btn danger" type="submit">{{ ic.icon('close',15) }} Reject</button>
+      </form>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="card card-pad">
+    <h3 style="margin-bottom:10px">Record info</h3>
+    <div class="kv">
+      <div class="k">Claim #</div><div>{{ row.claim_number }}</div>
+      <div class="k">Employee</div><div><a href="{{ url_for('employees.view', id=row.employee_id) }}">{{ row.employee_name }}</a></div>
+      <div class="k">Submitted</div><div>{{ row.created_at|fmt_datetime }}</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

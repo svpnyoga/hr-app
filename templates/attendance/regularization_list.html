@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Attendance Regularization{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Attendance Regularization</h1>
+    <div class="sub">{{ 'All requests' if view_all else 'Your requests' }}</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <a class="btn" href="{{ url_for('attendance.daily') }}">{{ ic.icon('clock',15) }} Daily Attendance</a>
+    <a class="btn primary" href="{{ url_for('attendance.regularization_new') }}">{{ ic.icon('plus',15) }} New Request</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-pad" style="padding-bottom:0">
+    <form class="toolbar" method="get">
+      <select class="filter-select" name="status" onchange="this.form.submit()">
+        <option value="">All statuses</option>
+        <option value="Pending" {{ 'selected' if status_filter == 'Pending' }}>Pending</option>
+        <option value="Approved" {{ 'selected' if status_filter == 'Approved' }}>Approved</option>
+        <option value="Rejected" {{ 'selected' if status_filter == 'Rejected' }}>Rejected</option>
+      </select>
+      {% if status_filter %}<a class="btn sm ghost" href="{{ url_for('attendance.regularization_list') }}">Clear</a>{% endif %}
+    </form>
+  </div>
+  <div class="table-wrap">
+    {% if rows %}
+    <table class="dt">
+      <thead><tr>
+        {% if view_all %}<th>Employee</th>{% endif %}
+        <th>Date</th><th>Requested In</th><th>Requested Out</th><th>Reason</th><th>Status</th><th>Submitted</th>
+        {% if can_approve %}<th style="text-align:right">Actions</th>{% endif %}
+      </tr></thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          {% if view_all %}<td>{{ r.first_name }} {{ r.last_name }} <span class="text-muted">({{ r.employee_code }})</span></td>{% endif %}
+          <td>{{ r.attendance_date|fmt_date }}</td>
+          <td>{{ r.requested_check_in|fmt_time if r.requested_check_in else '—' }}</td>
+          <td>{{ r.requested_check_out|fmt_time if r.requested_check_out else '—' }}</td>
+          <td>{{ r.reason }}</td>
+          <td><span class="badge {{ status_badge_class(r.status) }}">{{ r.status }}</span></td>
+          <td>{{ r.created_at|fmt_datetime }}</td>
+          {% if can_approve %}
+          <td>
+            {% if r.status == 'Pending' %}
+            <div class="row-actions">
+              <form method="post" action="{{ url_for('attendance.regularization_status', id=r.id) }}">
+                <input type="hidden" name="status" value="Approved">
+                <button class="btn sm success" type="submit">{{ ic.icon('check',13) }} Approve</button>
+              </form>
+              <form method="post" action="{{ url_for('attendance.regularization_status', id=r.id) }}">
+                <input type="hidden" name="status" value="Rejected">
+                <button class="btn sm danger" type="submit">{{ ic.icon('close',13) }} Reject</button>
+              </form>
+            </div>
+            {% endif %}
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="ic">{{ ic.icon('history', 34) }}</div>
+      <p>No regularization requests found.</p>
+    </div>
+    {% endif %}
+  </div>
+  <div class="card-pad"></div>
+</div>
+{% endblock %}

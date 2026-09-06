@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Apply for Leave{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('leave.requests_list') }}">Leave Requests</a> / New</div>
+<div class="page-head"><div><h1>Apply for Leave</h1></div></div>
+
+{% include "leave/_balance_card.html" %}
+
+<div class="card card-pad" style="max-width:720px">
+  <form method="post" enctype="multipart/form-data">
+    <div class="form-grid">
+      <div class="field">
+        <label>Leave Type <span class="req">*</span></label>
+        <select name="leave_type_id" required>
+          <option value="">— Select —</option>
+          {% for lt in leave_types %}
+          <option value="{{ lt.id }}" {{ 'selected' if form and form.leave_type_id|string == lt.id|string }}>{{ lt.name }} ({{ lt.days_per_year }} days/yr)</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div></div>
+      <div class="field">
+        <label>From Date <span class="req">*</span></label>
+        <input type="date" name="from_date" value="{{ form.from_date if form else '' }}" required>
+      </div>
+      <div class="field">
+        <label>To Date <span class="req">*</span></label>
+        <input type="date" name="to_date" value="{{ form.to_date if form else '' }}" required>
+      </div>
+      <div class="field full">
+        <label>Reason</label>
+        <textarea name="reason">{{ form.reason if form else '' }}</textarea>
+      </div>
+      <div class="field full">
+        <label>Supporting Document (optional)</label>
+        <input type="file" name="document">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Submit Request</button>
+      <a class="btn" href="{{ url_for('leave.requests_list') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

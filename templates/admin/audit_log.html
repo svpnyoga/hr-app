@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Audit Log{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('admin.settings') }}">Administration</a> / Audit Log</div>
+<div class="page-head">
+  <div>
+    <h1>Audit Log</h1>
+    <div class="sub">Most recent {{ rows|length }} activity record{{ 's' if rows|length != 1 else '' }} (read-only)</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-pad" style="padding-bottom:0">
+    <form class="toolbar" method="get">
+      <div class="search-box">
+        {{ ic.icon('search',13) }}
+        <input type="text" name="entity_type" value="{{ entity_type }}" placeholder="Filter by entity (e.g. leave.requests)...">
+      </div>
+      <select class="filter-select" name="user_id" onchange="this.form.submit()">
+        <option value="">All users</option>
+        {% for u in users %}
+        <option value="{{ u.id }}" {{ 'selected' if user_id==u.id }}>{{ u.full_name }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn sm" type="submit">Filter</button>
+      {% if entity_type or user_id %}<a class="btn sm ghost" href="{{ url_for('admin.audit_log') }}">Clear</a>{% endif %}
+    </form>
+  </div>
+  <div class="table-wrap">
+    {% if rows %}
+    <table class="dt">
+      <thead><tr>
+        <th>When</th><th>Actor</th><th>Action</th><th>Entity</th><th>Entity ID</th><th>Details</th><th>IP</th>
+      </tr></thead>
+      <tbody>
+        {% for a in rows %}
+        <tr>
+          <td style="white-space:nowrap">{{ a.created_at|fmt_datetime }}</td>
+          <td>{{ a.actor_name or 'System' }}{% if a.actor_username %} <span class="text-muted">({{ a.actor_username }})</span>{% endif %}</td>
+          <td><span class="badge {{ status_badge_class(a.action) }}">{{ a.action }}</span></td>
+          <td>{{ a.entity_type }}</td>
+          <td>{{ a.entity_id if a.entity_id is not none else '—' }}</td>
+          <td class="text-muted" style="max-width:360px">{{ a.details or '—' }}</td>
+          <td class="text-muted">{{ a.ip_address or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state"><div class="ic">{{ ic.icon('history',34) }}</div><p>No audit records match your filters.</p></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

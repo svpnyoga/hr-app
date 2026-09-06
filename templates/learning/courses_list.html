@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Courses{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Courses</h1>
+    <div class="sub">{{ total }} course{{ 's' if total != 1 else '' }} in the catalog</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <a class="btn" href="{{ url_for('learning.my_learning') }}">{{ ic.icon('graduation',15) }} My learning</a>
+    {% if can_create %}
+    <a class="btn primary" href="{{ url_for('learning.course_new') }}">{{ ic.icon('plus',15) }} New course</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-pad" style="padding-bottom:0">
+    <form class="toolbar" method="get">
+      <div class="search-box">
+        {{ ic.icon('search',13) }}
+        <input type="text" name="q" value="{{ q }}" placeholder="Search title, trainer, code...">
+      </div>
+      <select name="category" class="filter-select" onchange="this.form.submit()">
+        <option value="">All categories</option>
+        {% for c in categories %}
+        <option value="{{ c.category }}" {{ 'selected' if c.category == category }}>{{ c.category }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn sm" type="submit">Search</button>
+      {% if q or category %}<a class="btn sm ghost" href="{{ url_for('learning.courses_list') }}">Clear</a>{% endif %}
+    </form>
+  </div>
+  <div class="table-wrap">
+    {% if rows %}
+    <table class="dt">
+      <thead><tr>
+        <th>Title</th><th>Category</th><th>Duration</th><th>Delivery</th><th>Trainer</th><th>Sessions</th><th>Status</th><th style="text-align:right">Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>
+            <div class="cell-person">
+              <div><div class="n">{{ row.title }}</div><div class="s">{{ row.course_code }}</div></div>
+            </div>
+          </td>
+          <td>{{ row.category or '—' }}</td>
+          <td>{{ row.duration_hours }} hrs</td>
+          <td><span class="badge {{ status_badge_class(row.delivery_mode) }}">{{ row.delivery_mode }}</span></td>
+          <td>{{ row.trainer_name or '—' }}</td>
+          <td>{{ row.session_count }}</td>
+          <td><span class="badge {{ 'green' if row.is_active else 'gray' }}">{{ 'Active' if row.is_active else 'Inactive' }}</span></td>
+          <td>
+            <div class="row-actions">
+              <a class="btn sm btn-icon" href="{{ url_for('learning.course_view', id=row.id) }}" title="View">{{ ic.icon('eye',14) }}</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="ic">{{ ic.icon('graduation', 34) }}</div>
+      <p>No courses found{{ ' for "%s"'|format(q) if q else '' }}.</p>
+    </div>
+    {% endif %}
+  </div>
+  <div class="card-pad" style="padding-top:12px">
+    {% include "partials/pagination.html" %}
+  </div>
+</div>
+{% endblock %}

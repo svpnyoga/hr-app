@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Plan Field Visit{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('field.visits_list') }}">Field Visits</a> / New</div>
+<div class="page-head"><div><h1>Plan a field visit</h1></div></div>
+
+<div class="card card-pad" style="max-width:720px">
+  <form method="post">
+    <div class="form-grid">
+      {% if view_all %}
+      <div class="field full">
+        <label>Employee</label>
+        <select name="employee_id">
+          {% for e in employees %}
+          <option value="{{ e.id }}" {{ 'selected' if g.employee and e.id == g.employee.id }}>{{ e.first_name }} {{ e.last_name }} ({{ e.employee_code }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+      <div class="field">
+        <label>Visit date <span class="req">*</span></label>
+        <input type="date" name="visit_date" value="{{ today }}" required>
+      </div>
+      <div class="field full">
+        <label>Customer name <span class="req">*</span></label>
+        <input type="text" name="customer_name" required placeholder="Company or client name">
+      </div>
+      <div class="field full">
+        <label>Purpose</label>
+        <textarea name="purpose" placeholder="Reason for the visit"></textarea>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Plan visit</button>
+      <a class="btn" href="{{ url_for('field.visits_list') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

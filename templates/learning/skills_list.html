@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Skill Matrix{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Skill matrix{% if employee %} · {{ employee.first_name }} {{ employee.last_name }}{% endif %}</h1>
+    <div class="sub">{{ rows|length }} skill record{{ 's' if rows|length != 1 else '' }}</div>
+  </div>
+</div>
+
+{% if view_all %}
+<div class="card">
+  <div class="card-pad" style="padding-bottom:0">
+    <form class="toolbar" method="get">
+      <select name="employee_id" class="filter-select" onchange="this.form.submit()" style="min-width:220px">
+        <option value="">All employees</option>
+        {% for e in employees %}
+        <option value="{{ e.id }}" {{ 'selected' if employee_id == e.id }}>{{ e.first_name }} {{ e.last_name }} ({{ e.employee_code }})</option>
+        {% endfor %}
+      </select>
+      {% if employee_id %}<a class="btn sm ghost" href="{{ url_for('learning.skills_list') }}">Clear</a>{% endif %}
+    </form>
+  </div>
+</div>
+{% endif %}
+
+{% if can_add %}
+<div class="card card-pad" style="margin-top:14px;max-width:640px">
+  <h3 style="margin-bottom:12px">Add a skill</h3>
+  <form method="post" action="{{ url_for('learning.skill_add') }}">
+    <div class="form-grid">
+      {% if view_all %}
+      <div class="field full">
+        <label>Employee <span class="req">*</span></label>
+        <select name="employee_id" required>
+          <option value="">— Select employee —</option>
+          {% for e in employees %}
+          <option value="{{ e.id }}" {{ 'selected' if employee_id == e.id }}>{{ e.first_name }} {{ e.last_name }} ({{ e.employee_code }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% else %}
+      <input type="hidden" name="employee_id" value="{{ employee_id }}">
+      {% endif %}
+      <div class="field">
+        <label>Skill name <span class="req">*</span></label>
+        <input type="text" name="skill_name" required placeholder="e.g. Python, Negotiation">
+      </div>
+      <div class="field">
+        <label>Proficiency level</label>
+        <select name="proficiency_level">
+          {% for p in proficiency_levels %}
+          <option value="{{ p }}">{{ p }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Add skill</button>
+    </div>
+  </form>
+</div>
+{% endif %}
+
+<div class="card" style="margin-top:14px">
+  <div class="table-wrap">
+    {% if rows %}
+    <table class="dt">
+      <thead><tr>
+        {% if view_all %}<th>Employee</th>{% endif %}
+        <th>Skill</th><th>Proficiency</th><th>Assessed on</th>
+      </tr></thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          {% if view_all %}<td>{{ r.first_name }} {{ r.last_name }} <span class="text-muted">({{ r.employee_code }})</span></td>{% endif %}
+          <td>{{ r.skill_name }}</td>
+          <td><span class="badge {{ status_badge_class(r.proficiency_level) }}">{{ r.proficiency_level }}</span></td>
+          <td>{{ r.assessed_date|fmt_date }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="ic">{{ ic.icon('star', 34) }}</div>
+      <p>No skills recorded yet.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}{{ req.title }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('recruitment.requisitions_list') }}">Job Requisitions</a> / {{ req.requisition_number }}</div>
+<div class="page-head">
+  <div>
+    <h1>{{ req.title }}</h1>
+    <span class="badge {{ status_badge_class(req.status) }}">{{ req.status }}</span>
+    <span class="text-muted" style="font-size:12.5px;margin-left:6px">{{ req.requisition_number }}</span>
+  </div>
+  <div style="display:flex;gap:8px">
+    <a class="btn" href="{{ url_for('recruitment.pipeline', requisition_id=req.id) }}">{{ ic.icon('target',15) }} View pipeline</a>
+    {% if can_add_application %}
+    <a class="btn" href="{{ url_for('recruitment.application_new', requisition_id=req.id) }}">{{ ic.icon('plus',15) }} Add application</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="detail-grid">
+  <div class="card card-pad">
+    <h3 style="margin-bottom:14px">Details</h3>
+    <div class="kv">
+      <div class="k">Department</div><div>{{ req.department_name or '—' }}</div>
+      <div class="k">Designation</div><div>{{ req.designation_title or '—' }}</div>
+      <div class="k">Location</div><div>{{ req.location_name or '—' }}</div>
+      <div class="k">Openings</div><div>{{ req.num_openings }}</div>
+      <div class="k">Employment Type</div><div>{{ req.employment_type }}</div>
+      <div class="k">Experience Required</div><div>{{ req.experience_required or '—' }}</div>
+      <div class="k">Requested By</div><div>{{ req.requested_by_name or '—' }}</div>
+      <div class="k">Created</div><div>{{ req.created_at|fmt_datetime }}</div>
+    </div>
+    {% if req.description %}
+    <h3 style="margin:18px 0 8px">Description</h3>
+    <p style="font-size:13px;white-space:pre-wrap">{{ req.description }}</p>
+    {% endif %}
+  </div>
+
+  <div class="card card-pad">
+    <h3 style="margin-bottom:10px">Status</h3>
+    {% if can_edit %}
+    <form method="post" action="{{ url_for('recruitment.requisition_status', id=req.id) }}" class="form-grid" style="grid-template-columns:1fr">
+      <div class="field">
+        <select name="status">
+          {% for s in statuses %}<option value="{{ s }}" {{ 'selected' if req.status==s }}>{{ s }}</option>{% endfor %}
+        </select>
+      </div>
+      <button class="btn primary sm" type="submit">Update status</button>
+    </form>
+    {% else %}
+    <p style="font-size:13px">{{ req.status }}</p>
+    {% endif %}
+
+    <h3 style="margin:20px 0 10px">Applications by stage</h3>
+    <div class="kv" style="grid-template-columns:1fr auto">
+      {% for s in stages %}
+        <div class="k">{{ s }}</div><div>{{ stage_counts[s] }}</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:18px">
+  <div class="card-pad" style="padding-bottom:0"><h3>Applications ({{ applications|length }})</h3></div>
+  <div class="table-wrap">
+    {% if applications %}
+    <table class="dt">
+      <thead><tr><th>Candidate</th><th>Email</th><th>Stage</th><th>Applied</th><th style="text-align:right">Actions</th></tr></thead>
+      <tbody>
+        {% for a in applications %}
+        <tr>
+          <td>{{ a.candidate_name }}</td>
+          <td>{{ a.candidate_email or '—' }}</td>
+          <td><span class="badge {{ status_badge_class(a.stage) }}">{{ a.stage }}</span></td>
+          <td>{{ a.applied_date|fmt_date }}</td>
+          <td>
+            <div class="row-actions">
+              <a class="btn sm btn-icon" href="{{ url_for('recruitment.application_view', id=a.id) }}" title="View">{{ ic.icon('eye',14) }}</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state"><div class="ic">{{ ic.icon('id-card', 30) }}</div><p>No applications for this requisition yet.</p></div>
+    {% endif %}
+  </div>
+  <div class="card-pad"></div>
+</div>
+{% endblock %}

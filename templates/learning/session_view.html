@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Session · {{ session.course_title }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('learning.courses_list') }}">Courses</a> / <a href="{{ url_for('learning.course_view', id=session.course_id) }}">{{ session.course_title }}</a> / {{ session.session_date|fmt_date }}</div>
+<div class="page-head">
+  <div>
+    <h1>{{ session.course_title }}</h1>
+    <div class="sub">{{ session.course_code }} &middot; {{ session.session_date|fmt_date }}</div>
+    <span class="badge {{ status_badge_class(session.status) }}">{{ session.status }}</span>
+  </div>
+</div>
+
+<div class="detail-grid">
+  <div class="card card-pad">
+    <h3 style="margin-bottom:14px">Session details</h3>
+    <div class="kv">
+      <div class="k">Date</div><div>{{ session.session_date|fmt_date }}</div>
+      <div class="k">Time</div><div>{{ session.start_time|fmt_time if session.start_time else '—' }}{% if session.end_time %} – {{ session.end_time|fmt_time }}{% endif %}</div>
+      <div class="k">Location</div><div>{{ session.location_name or '—' }}</div>
+      <div class="k">Trainer</div><div>{{ session.trainer_name or '—' }}</div>
+      <div class="k">Capacity</div><div>{{ roster|length }} / {{ session.capacity }}</div>
+    </div>
+  </div>
+  <div class="card card-pad">
+    <h3 style="margin-bottom:10px">Enroll</h3>
+    {% if not under_capacity %}
+    <span class="badge red">Session full</span>
+    {% else %}
+      {% if can_enroll_self %}
+      <form method="post" action="{{ url_for('learning.enroll', session_id=session.id) }}" style="margin-bottom:10px">
+        <button class="btn primary" type="submit" style="width:100%">{{ ic.icon('plus',14) }} Enroll me</button>
+      </form>
+      {% endif %}
+      {% if can_enroll_others %}
+      <form method="post" action="{{ url_for('learning.enroll', session_id=session.id) }}">
+        <div class="field" style="margin-bottom:8px">
+          <label>Enroll an employee</label>
+          <select name="employee_id" required>
+            <option value="">— Select employee —</option>
+            {% for e in employees %}
+            <option value="{{ e.id }}">{{ e.first_name }} {{ e.last_name }} ({{ e.employee_code }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button class="btn" type="submit" style="width:100%">Enroll employee</button>
+      </form>
+      {% endif %}
+      {% if not can_enroll_self and not can_enroll_others %}
+      <p class="text-muted" style="font-size:12.5px">You don't have permission to enroll in this session.</p>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+
+<div class="card" style="margin-top:18px">
+  <div class="card-head"><h3>Roster</h3></div>
+  <div class="table-wrap">
+    {% if roster %}
+    {% if can_update_enrollment %}
+      {% for e in roster %}
+      <form id="ef-{{ e.id }}" method="post" action="{{ url_for('learning.enrollment_update', id=e.id) }}"></form>
+      {% endfor %}
+    {% endif %}
+    <table class="dt">
+      <thead><tr>
+        <th>Employee</th><th>Enrolled on</th><th>Attendance</th><th>Score</th><th>Certificate</th><th>Feedback</th>
+        {% if can_update_enrollment %}<th style="text-align:right">Actions</th>{% endif %}
+      </tr></thead>
+      <tbody>
+        {% for e in roster %}
+        <tr>
+          <td><div class="cell-person"><div><div class="n">{{ e.first_name }} {{ e.last_name }}</div><div class="s">{{ e.employee_code }}</div></div></div></td>
+          <td>{{ e.enrollment_date|fmt_date }}</td>
+          <td>
+            {% if can_update_enrollment %}
+            <select name="attendance_status" form="ef-{{ e.id }}">
+              {% for st in attendance_statuses %}
+              <option value="{{ st }}" {{ 'selected' if e.attendance_status == st }}>{{ st }}</option>
+              {% endfor %}
+            </select>
+            {% else %}
+            <span class="badge {{ status_badge_class(e.attendance_status) }}">{{ e.attendance_status }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if can_update_enrollment %}
+            <input type="number" step="0.1" min="0" max="100" name="assessment_score" form="ef-{{ e.id }}" value="{{ e.assessment_score if e.assessment_score is not none else '' }}" style="width:80px">
+            {% else %}
+            {{ e.assessment_score if e.assessment_score is not none else '—' }}
+            {% endif %}
+          </td>
+          <td>
+            {% if can_update_enrollment %}
+            <input type="checkbox" name="certificate_issued" form="ef-{{ e.id }}" {{ 'checked' if e.certificate_issued }}>
+            {% else %}
+            <span class="badge {{ 'green' if e.certificate_issued else 'gray' }}">{{ 'Yes' if e.certificate_issued else 'No' }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if can_update_enrollment %}
+            <input type="number" step="1" min="1" max="5" name="feedback_rating" form="ef-{{ e.id }}" value="{{ e.feedback_rating if e.feedback_rating is not none else '' }}" style="width:60px">
+            {% else %}
+            {{ e.feedback_rating if e.feedback_rating is not none else '—' }}
+            {% endif %}
+          </td>
+          {% if can_update_enrollment %}
+          <td>
+            <div class="row-actions">
+              <button class="btn sm" type="submit" form="ef-{{ e.id }}">Save</button>
+            </div>
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="ic">{{ ic.icon('users', 34) }}</div>
+      <p>No one is enrolled in this session yet.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

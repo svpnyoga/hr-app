@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}{{ row.name }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('crm.customers_list') }}">Customers</a> / {{ row.name }}</div>
+<div class="page-head">
+  <div>
+    <h1>{{ row.name }}</h1>
+    <div class="sub">{{ row.customer_code }}{% if row.industry %} &middot; {{ row.industry }}{% endif %}</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <a href="{{ url_for('crm.customers_list') }}">{{ ic.icon('building',14) }} Customers</a>
+  <a href="{{ url_for('crm.leads_pipeline') }}">{{ ic.icon('handshake',14) }} Leads Pipeline</a>
+</div>
+
+<div class="detail-grid">
+  <div style="display:flex;flex-direction:column;gap:18px">
+
+    <div class="card card-pad">
+      <h3 style="margin-bottom:14px">Details</h3>
+      <div class="kv">
+        <div class="k">Customer code</div><div>{{ row.customer_code }}</div>
+        <div class="k">Industry</div><div>{{ row.industry or '—' }}</div>
+        <div class="k">Phone</div><div>{{ row.phone or '—' }}</div>
+        <div class="k">Email</div><div>{{ row.email or '—' }}</div>
+        <div class="k">City</div><div>{{ row.city or '—' }}</div>
+        <div class="k">Address</div><div>{{ row.address or '—' }}</div>
+        <div class="k">Owner</div><div>{{ row.owner_name or '—' }}</div>
+        <div class="k">Created</div><div>{{ row.created_at|fmt_datetime }}</div>
+      </div>
+    </div>
+
+    <div class="card card-pad">
+      <h3 style="margin-bottom:14px">Contacts</h3>
+      {% if contacts %}
+      <div class="table-wrap">
+        <table class="dt">
+          <thead><tr><th>Name</th><th>Designation</th><th>Phone</th><th>Email</th><th style="text-align:right">Actions</th></tr></thead>
+          <tbody>
+          {% for c in contacts %}
+            <tr>
+              <td>{{ c.name }}</td>
+              <td>{{ c.designation or '—' }}</td>
+              <td>{{ c.phone or '—' }}</td>
+              <td>{{ c.email or '—' }}</td>
+              <td>
+                {% if can_edit %}
+                <div class="row-actions">
+                  <form method="post" action="{{ url_for('crm.contact_delete', id=c.id) }}" onsubmit="return confirmDelete(this, 'Remove this contact?')">
+                    <button class="btn sm btn-icon" type="submit" title="Delete">{{ ic.icon('trash',14) }}</button>
+                  </form>
+                </div>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-muted">No contacts yet.</p>
+      {% endif %}
+
+      {% if can_edit %}
+      <form method="post" action="{{ url_for('crm.contact_add') }}" style="margin-top:16px">
+        <input type="hidden" name="customer_id" value="{{ row.id }}">
+        <div class="form-grid cols-3">
+          <div class="field"><label>Name <span class="req">*</span></label><input type="text" name="name" required></div>
+          <div class="field"><label>Designation</label><input type="text" name="designation"></div>
+          <div class="field"><label>Phone</label><input type="tel" name="phone"></div>
+          <div class="field"><label>Email</label><input type="email" name="email"></div>
+        </div>
+        <div class="form-actions" style="margin-top:10px;padding-top:10px">
+          <button class="btn sm primary" type="submit">{{ ic.icon('plus',13) }} Add Contact</button>
+        </div>
+      </form>
+      {% endif %}
+    </div>
+
+    <div class="card card-pad">
+      <h3 style="margin-bottom:14px">Activities</h3>
+      {% if activities %}
+      <div class="hr-timeline">
+        {% for a in activities %}
+        <div class="hr-timeline-item">
+          <div class="node">{{ ic.icon('clock', 10) }}</div>
+          <div class="card">
+            <div class="h">
+              <span>{{ a.activity_type }}{% if a.subject %} — {{ a.subject }}{% endif %}</span>
+              <span class="badge gray">{{ a.activity_date|fmt_date }}</span>
+            </div>
+            {% if a.notes %}<div class="d">{{ a.notes }}</div>{% endif %}
+            <div class="t">Logged by {{ a.owner_name or '—' }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-muted">No activities logged yet.</p>
+      {% endif %}
+
+      <form method="post" action="{{ url_for('crm.activity_new') }}" style="margin-top:16px">
+        <input type="hidden" name="customer_id" value="{{ row.id }}">
+        <div class="form-grid cols-3">
+          <div class="field">
+            <label>Type</label>
+            <select name="activity_type">
+              {% for t in activity_types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="field"><label>Subject</label><input type="text" name="subject"></div>
+          <div class="field"><label>Date</label><input type="date" name="activity_date" value="{{ today }}"></div>
+          <div class="field full"><label>Notes</label><textarea name="notes"></textarea></div>
+        </div>
+        <div class="form-actions" style="margin-top:10px;padding-top:10px">
+          <button class="btn sm primary" type="submit">{{ ic.icon('plus',13) }} Log Activity</button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  <div class="card card-pad">
+    <h3 style="margin-bottom:10px">Record info</h3>
+    <div class="kv">
+      <div class="k">Record ID</div><div>#{{ row.id }}</div>
+      <div class="k">Created</div><div>{{ row.created_at|fmt_datetime }}</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

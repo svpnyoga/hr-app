@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Notifications</h1>
+    <div class="sub">{{ total }} notification{{ 's' if total != 1 }} total</div>
+  </div>
+  <div class="actions">
+    {% if rows %}
+    <form method="post" action="{{ url_for('notifications.mark_all_read') }}">
+      <button class="btn" type="submit">{{ ic.icon('check', 15) }} Mark all as read</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-pad">
+    {% if rows %}
+    {% for n in rows %}
+    <div class="notif-item" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 12px;{{ 'border-top:1px solid var(--border)' if not loop.first }}{{ ';background:var(--surface-2);border-radius:9px' if not n.is_read }}">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span class="t" style="font-size:13.5px">{{ n.title }}</span>
+          <span class="badge {{ status_badge_class(n.type) }}">{{ n.type }}</span>
+          {% if not n.is_read %}<span class="badge accent">New</span>{% endif %}
+        </div>
+        {% if n.message %}<div class="m" style="margin-top:3px">{{ n.message }}</div>{% endif %}
+        <div class="ts" style="margin-top:5px">{{ n.created_at|fmt_datetime }}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        {% if n.link %}<a class="btn sm ghost" href="{{ n.link }}">Open</a>{% endif %}
+        {% if not n.is_read %}
+        <form method="post" action="{{ url_for('notifications.mark_read', id=n.id) }}">
+          <button class="btn sm" type="submit">Mark read</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty-state">
+      <div class="ic">{{ ic.icon('bell', 34) }}</div>
+      <p>You have no notifications yet.</p>
+    </div>
+    {% endif %}
+  </div>
+  {% if rows %}
+  <div class="card-pad" style="padding-top:0">
+    <div class="pagination">
+      <span>Page {{ page }} &middot; {{ total }} total</span>
+      <div class="pages">
+        {% if page > 1 %}<a href="{{ url_for('notifications.index', page=page-1) }}">Prev</a>{% endif %}
+        <span class="current">{{ page }}</span>
+        {% if has_more %}<a href="{{ url_for('notifications.index', page=page+1) }}">Next</a>{% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

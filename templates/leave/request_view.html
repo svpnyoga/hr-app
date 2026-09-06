@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}{{ row.request_number }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('leave.requests_list') }}">Leave Requests</a> / {{ row.request_number }}</div>
+<div class="page-head">
+  <div>
+    <h1>{{ row.request_number }}</h1>
+    <span class="badge {{ status_badge_class(row.status) }}">{{ row.status }}</span>
+  </div>
+  <div style="display:flex;gap:8px">
+    {% if can_approve %}
+    <form method="post" action="{{ url_for('leave.request_status', id=row.id) }}">
+      <input type="hidden" name="status" value="Approved">
+      <button class="btn success" type="submit">{{ ic.icon('check',15) }} Approve</button>
+    </form>
+    <form method="post" action="{{ url_for('leave.request_status', id=row.id) }}">
+      <input type="hidden" name="status" value="Rejected">
+      <button class="btn danger" type="submit">{{ ic.icon('close',15) }} Reject</button>
+    </form>
+    {% endif %}
+    {% if can_cancel %}
+    <form method="post" action="{{ url_for('leave.request_status', id=row.id) }}" onsubmit="return confirmDelete(this, 'Cancel this leave request?')">
+      <input type="hidden" name="status" value="Cancelled">
+      <button class="btn" type="submit">{{ ic.icon('close',15) }} Cancel Request</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="detail-grid">
+  <div class="card card-pad">
+    <h3 style="margin-bottom:14px">Details</h3>
+    <div class="kv">
+      <div class="k">Employee</div><div>{{ row.first_name }} {{ row.last_name }} ({{ row.employee_code }})</div>
+      <div class="k">Leave Type</div><div>{{ row.leave_type_name }}</div>
+      <div class="k">From</div><div>{{ row.from_date|fmt_date }}</div>
+      <div class="k">To</div><div>{{ row.to_date|fmt_date }}</div>
+      <div class="k">Days</div><div>{{ row.days }}</div>
+      <div class="k">Reason</div><div>{{ row.reason or '—' }}</div>
+      <div class="k">Document</div>
+      <div>
+        {% if row.document_path %}
+        <a href="{{ url_for('static', filename='uploads/' + row.document_path) }}" target="_blank">{{ ic.icon('file',14) }} View document</a>
+        {% else %}—{% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="card card-pad">
+    <h3 style="margin-bottom:10px">Record info</h3>
+    <div class="kv">
+      <div class="k">Request #</div><div>#{{ row.id }}</div>
+      <div class="k">Submitted</div><div>{{ row.created_at|fmt_datetime }}</div>
+      {% if row.approved_at %}<div class="k">Actioned</div><div>{{ row.approved_at|fmt_datetime }}</div>{% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

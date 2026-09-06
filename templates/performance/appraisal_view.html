@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Appraisal — {{ appraisal.first_name }} {{ appraisal.last_name }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('performance.cycle_view', id=appraisal.cycle_id) }}">{{ appraisal.cycle_name }}</a> / Appraisal</div>
+<div class="page-head">
+  <div>
+    <h1>{{ appraisal.first_name }} {{ appraisal.last_name }}</h1>
+    <div class="sub">{{ appraisal.employee_code }} &middot; {{ appraisal.cycle_name }}</div>
+  </div>
+  <div>
+    {% if appraisal.final_rating %}
+    <span class="rating">{% for i in range(appraisal.final_rating|round(0,'floor')|int) %}{{ ic.icon('star',15) }}{% endfor %}</span>
+    <span class="text-muted" style="font-size:12.5px">{{ appraisal.final_rating }} / 5</span>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card card-pad" style="margin-bottom:18px">
+  {% set idx = status_order.index(appraisal.status) if appraisal.status in status_order else 0 %}
+  <div class="progress"><div class="bar" style="width:{{ ((idx+1)/status_order|length*100)|round(0,'floor') }}%"></div></div>
+  <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-muted);margin-top:8px">
+    {% for s in status_order %}
+    <span style="{{ 'color:var(--brand-600);font-weight:700' if loop.index0 <= idx }}">{{ s }}</span>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:18px">
+  <div class="card-head"><h3>Goals for this Cycle</h3></div>
+  <div class="table-wrap">
+    {% if goals %}
+    <table class="dt">
+      <thead><tr><th>Title</th><th>KRA</th><th>Weight</th><th>Status</th><th>Self Rating</th><th>Manager Rating</th></tr></thead>
+      <tbody>
+        {% for goal in goals %}
+        <tr>
+          <td>{{ goal.title }}</td>
+          <td>{{ goal.kra or '—' }}</td>
+          <td>{{ goal.weight_pct }}%</td>
+          <td><span class="badge {{ status_badge_class(goal.status) }}">{{ goal.status }}</span></td>
+          <td>{% if goal.self_rating %}<span class="rating">{% for i in range(goal.self_rating) %}{{ ic.icon('star',12) }}{% endfor %}</span>{% else %}—{% endif %}</td>
+          <td>{% if goal.manager_rating %}<span class="rating">{% for i in range(goal.manager_rating) %}{{ ic.icon('star',12) }}{% endfor %}</span>{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state"><div class="ic">{{ ic.icon('flag',30) }}</div><p>No goals recorded for this cycle.</p></div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="detail-grid">
+  <div class="card card-pad">
+    <h3 style="margin-bottom:12px">Self Review</h3>
+    {% if can_self_review %}
+    <form method="post" action="{{ url_for('performance.appraisal_save', id=appraisal.id) }}">
+      <input type="hidden" name="form_action" value="self_review">
+      <div class="field full">
+        <textarea name="self_review" rows="6" placeholder="Reflect on your achievements, challenges and goals this cycle...">{{ appraisal.self_review or '' }}</textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn primary" type="submit">Submit Self Review</button>
+      </div>
+    </form>
+    {% else %}
+    <p style="white-space:pre-wrap">{{ appraisal.self_review or 'No self review submitted yet.' }}</p>
+    {% endif %}
+  </div>
+
+  <div class="card card-pad">
+    <h3 style="margin-bottom:12px">Manager Review</h3>
+    {% if can_approve %}
+    <form method="post" action="{{ url_for('performance.appraisal_save', id=appraisal.id) }}">
+      <input type="hidden" name="form_action" value="manager_review">
+      <div class="field full" style="margin-bottom:12px">
+        <label>Manager Review</label>
+        <textarea name="manager_review" rows="5">{{ appraisal.manager_review or '' }}</textarea>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Final Rating (1-5)</label>
+          <select name="final_rating">
+            <option value="">— Not rated —</option>
+            {% for i in range(1,6) %}<option value="{{ i }}" {{ 'selected' if appraisal.final_rating==i }}>{{ i }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Increment Recommended (%)</label>
+          <input type="number" step="any" name="increment_recommended_pct" value="{{ appraisal.increment_recommended_pct if appraisal.increment_recommended_pct is not none else '' }}">
+        </div>
+        <div class="field full">
+          <div class="checkbox-row">
+            <input type="checkbox" name="promotion_recommended" {{ 'checked' if appraisal.promotion_recommended }}>
+            <span class="help-text">Recommend for promotion</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn primary" type="submit">Complete Review</button>
+      </div>
+    </form>
+    {% else %}
+    <p style="white-space:pre-wrap">{{ appraisal.manager_review or 'No manager review submitted yet.' }}</p>
+    {% if appraisal.promotion_recommended %}<div class="badge green" style="margin-top:8px">Promotion recommended</div>{% endif %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

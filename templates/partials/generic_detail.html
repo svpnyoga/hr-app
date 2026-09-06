@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}{{ row.name or row.title or row.employee_code or (cfg.name_singular ~ ' #' ~ row.id) }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for(request.blueprint + '.' + cfg.key + '_list') }}">{{ cfg.name_plural }}</a> / #{{ row.id }}</div>
+<div class="page-head">
+  <div>
+    <h1>{{ row.name or row.title or (cfg.name_singular ~ ' #' ~ row.id) }}</h1>
+    {% if row.status %}<span class="badge {{ status_badge_class(row.status) }}">{{ row.status }}</span>{% endif %}
+    {% if row.stage %}<span class="badge {{ status_badge_class(row.stage) }}">{{ row.stage }}</span>{% endif %}
+  </div>
+  <div style="display:flex;gap:8px">
+    {% if can_edit %}<a class="btn" href="{{ url_for(request.blueprint + '.' + cfg.key + '_edit', id=row.id) }}">{{ ic.icon('pencil',15) }} Edit</a>{% endif %}
+    {% if can_delete %}
+    <form method="post" action="{{ url_for(request.blueprint + '.' + cfg.key + '_delete', id=row.id) }}" onsubmit="return confirmDelete(this, 'Delete this {{ cfg.name_singular|lower }}?')">
+      <button class="btn danger" type="submit">{{ ic.icon('trash',15) }} Delete</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="detail-grid">
+  <div class="card card-pad">
+    <h3 style="margin-bottom:14px">Details</h3>
+    <div class="kv">
+      {% for f in fields %}
+        {% if f.name not in ('status','stage') %}
+        <div class="k">{{ f.label }}</div>
+        <div>
+          {% if f.fk_table %}{{ row[f.name + '__label'] or '—' }}
+          {% elif f.type == 'checkbox' %}{{ 'Yes' if row[f.name] else 'No' }}
+          {% elif f.type == 'date' %}{{ row[f.name]|fmt_date }}
+          {% elif 'price' in f.name or 'total' in f.name or 'amount' in f.name or 'value' in f.name or 'salary' in f.name or 'limit' in f.name %}{{ row[f.name]|money }}
+          {% else %}{{ row[f.name] if row[f.name] is not none and row[f.name] != '' else '—' }}
+          {% endif %}
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  <div class="card card-pad">
+    <h3 style="margin-bottom:10px">Record info</h3>
+    <div class="kv">
+      <div class="k">Record ID</div><div>#{{ row.id }}</div>
+      {% if row.created_at %}<div class="k">Created</div><div>{{ row.created_at|fmt_datetime }}</div>{% endif %}
+      {% if row.updated_at %}<div class="k">Updated</div><div>{{ row.updated_at|fmt_datetime }}</div>{% endif %}
+    </div>
+  </div>
+</div>
+{% block extra %}{% endblock %}
+{% endblock %}

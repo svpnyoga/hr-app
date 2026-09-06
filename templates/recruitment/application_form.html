@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}New Application{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>New Application</h1></div></div>
+
+<div class="card card-pad" style="max-width:640px">
+  <form method="post">
+    <div class="form-grid" style="grid-template-columns:1fr">
+      {% if candidate %}
+      <div class="field">
+        <label>Candidate</label>
+        <input type="text" value="{{ candidate.full_name }} ({{ candidate.candidate_code }})" disabled>
+        <input type="hidden" name="candidate_id" value="{{ candidate.id }}">
+      </div>
+      {% else %}
+      <div class="field">
+        <label>Candidate <span class="req">*</span></label>
+        <select name="candidate_id" required>
+          <option value="">— Select candidate —</option>
+          {% for c in candidates %}<option value="{{ c.id }}">{{ c.full_name }} ({{ c.candidate_code }})</option>{% endfor %}
+        </select>
+      </div>
+      {% endif %}
+      <div class="field">
+        <label>Requisition <span class="req">*</span></label>
+        <select name="requisition_id" required>
+          <option value="">— Select open requisition —</option>
+          {% for r in open_requisitions %}
+          <option value="{{ r.id }}" {{ 'selected' if requisition_id==r.id }}>{{ r.requisition_number }} — {{ r.title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Create Application</button>
+      <a class="btn" href="{{ url_for('recruitment.pipeline') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

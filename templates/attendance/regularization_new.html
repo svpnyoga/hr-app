@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}New Regularization Request{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('attendance.regularization_list') }}">Regularization</a> / New</div>
+<div class="page-head"><div><h1>Request Attendance Regularization</h1></div></div>
+
+<div class="card card-pad" style="max-width:640px">
+  <form method="post">
+    <div class="form-grid" style="grid-template-columns:1fr">
+      <div class="field">
+        <label>Attendance Date <span class="req">*</span></label>
+        <input type="date" name="attendance_date" max="{{ today_iso }}" required>
+      </div>
+      <div class="field">
+        <label>Requested Check In</label>
+        <input type="time" name="requested_check_in">
+      </div>
+      <div class="field">
+        <label>Requested Check Out</label>
+        <input type="time" name="requested_check_out">
+      </div>
+      <div class="field">
+        <label>Reason <span class="req">*</span></label>
+        <textarea name="reason" required placeholder="Explain why this correction is needed..."></textarea>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Submit Request</button>
+      <a class="btn" href="{{ url_for('attendance.regularization_list') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

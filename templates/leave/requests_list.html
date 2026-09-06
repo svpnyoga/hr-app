@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Leave Requests{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Leave Requests</h1>
+    <div class="sub">{{ 'All employee requests' if view_all else 'Your requests' }}</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <a class="btn" href="{{ url_for('leave.calendar') }}">{{ ic.icon('calendar',15) }} Calendar</a>
+    {% if can_export %}
+    <a class="btn" href="?{{ request.query_string.decode() }}{{ '&' if request.query_string else '' }}export=csv">{{ ic.icon('download',15) }} Export CSV</a>
+    {% endif %}
+    {% if can_create %}
+    <a class="btn primary" href="{{ url_for('leave.request_new') }}">{{ ic.icon('plus',15) }} Apply for Leave</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if not view_all %}{% include "leave/_balance_card.html" %}{% endif %}
+
+<div class="card">
+  <div class="card-pad" style="padding-bottom:0">
+    <form class="toolbar" method="get">
+      <select class="filter-select" name="status" onchange="this.form.submit()">
+        <option value="">All statuses</option>
+        <option value="Pending" {{ 'selected' if status_filter == 'Pending' }}>Pending</option>
+        <option value="Approved" {{ 'selected' if status_filter == 'Approved' }}>Approved</option>
+        <option value="Rejected" {{ 'selected' if status_filter == 'Rejected' }}>Rejected</option>
+        <option value="Cancelled" {{ 'selected' if status_filter == 'Cancelled' }}>Cancelled</option>
+      </select>
+      <select class="filter-select" name="leave_type_id" onchange="this.form.submit()">
+        <option value="">All leave types</option>
+        {% for lt in leave_types %}
+        <option value="{{ lt.id }}" {{ 'selected' if leave_type_filter|string == lt.id|string }}>{{ lt.name }}</option>
+        {% endfor %}
+      </select>
+      {% if status_filter or leave_type_filter %}<a class="btn sm ghost" href="{{ url_for('leave.requests_list') }}">Clear</a>{% endif %}
+    </form>
+  </div>
+  <div class="table-wrap">
+    {% if rows %}
+    <table class="dt">
+      <thead><tr>
+        <th>Request #</th>
+        {% if view_all %}<th>Employee</th>{% endif %}
+        <th>Leave Type</th><th>From</th><th>To</th><th>Days</th><th>Status</th><th style="text-align:right">Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>{{ r.request_number }}</td>
+          {% if view_all %}<td>{{ r.first_name }} {{ r.last_name }} <span class="text-muted">({{ r.employee_code }})</span></td>{% endif %}
+          <td>{{ r.leave_type_name }}</td>
+          <td>{{ r.from_date|fmt_date }}</td>
+          <td>{{ r.to_date|fmt_date }}</td>
+          <td>{{ r.days }}</td>
+          <td><span class="badge {{ status_badge_class(r.status) }}">{{ r.status }}</span></td>
+          <td><div class="row-actions"><a class="btn sm btn-icon" href="{{ url_for('leave.request_view', id=r.id) }}" title="View">{{ ic.icon('eye',14) }}</a></div></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="ic">{{ ic.icon('umbrella', 34) }}</div>
+      <p>No leave requests found.</p>
+    </div>
+    {% endif %}
+  </div>
+  <div class="card-pad"></div>
+</div>
+{% endblock %}

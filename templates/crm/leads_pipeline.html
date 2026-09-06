@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Leads Pipeline{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Leads Pipeline</h1>
+    <div class="sub">Drag a card between columns to update its stage</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    {% if can_create %}
+    <a class="btn primary" href="{{ url_for('crm.lead_new') }}">{{ ic.icon('plus',15) }} New Lead</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="tabs">
+  <a href="{{ url_for('crm.customers_list') }}">{{ ic.icon('building',14) }} Customers</a>
+  <a class="active" href="{{ url_for('crm.leads_pipeline') }}">{{ ic.icon('handshake',14) }} Leads Pipeline</a>
+</div>
+
+<div class="kpi-grid" style="margin-bottom:18px">
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--brand-100);color:var(--brand-600)">{{ ic.icon('wallet',18) }}</div>
+    <div>
+      <div class="value">{{ total_pipeline_value|money }}</div>
+      <div class="label">Open pipeline value</div>
+    </div>
+  </div>
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--green-bg);color:var(--green)">{{ ic.icon('trending-up',18) }}</div>
+    <div>
+      <div class="value">{{ won_this_month|money }}</div>
+      <div class="label">Won this month</div>
+    </div>
+  </div>
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--accent-bg);color:var(--accent-600)">{{ ic.icon('target',18) }}</div>
+    <div>
+      <div class="value">{{ "%.1f"|format(win_rate) }}%</div>
+      <div class="label">Win rate</div>
+    </div>
+  </div>
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--indigo-bg);color:var(--indigo)">{{ ic.icon('handshake',18) }}</div>
+    <div>
+      <div class="value">{{ lead_total }}</div>
+      <div class="label">Total leads</div>
+    </div>
+  </div>
+</div>
+
+{% if lead_total == 0 %}
+<div class="card">
+  <div class="empty-state">
+    <div class="ic">{{ ic.icon('handshake', 34) }}</div>
+    <p>No leads yet. Create your first lead to start the pipeline.</p>
+  </div>
+</div>
+{% else %}
+<div class="kanban">
+  {% for stage in stages %}
+  <div class="kanban-col" data-stage="{{ stage }}">
+    <h4><span>{{ stage }}</span><span>{{ columns[stage]|length }}</span></h4>
+    {% for lead in columns[stage] %}
+    <div class="kanban-card" draggable="true" data-id="{{ lead.id }}" onclick="location.href='{{ url_for('crm.lead_view', id=lead.id) }}'">
+      <div class="name">{{ lead.company_name }}</div>
+      {% if lead.contact_name %}<div class="text-muted" style="font-size:11.5px">{{ lead.contact_name }}</div>{% endif %}
+      <div class="meta">
+        <span>{{ lead.estimated_value|money if lead.estimated_value else '—' }}</span>
+        <span>{{ lead.owner_name or '—' }}</span>
+      </div>
+    </div>
+    {% else %}
+    <div class="text-muted" style="font-size:11.5px;padding:6px 2px">No leads</div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+  initKanbanDnD("/crm/leads/__ID__/stage");
+</script>
+{% endblock %}

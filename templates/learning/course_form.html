@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}{{ 'Edit' if row else 'New' }} Course{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('learning.courses_list') }}">Courses</a> / {{ 'Edit' if row else 'New' }}</div>
+<div class="page-head"><div><h1>{{ 'Edit' if row else 'New' }} Course</h1></div></div>
+
+<div class="card card-pad" style="max-width:880px">
+  <form method="post">
+    <div class="form-grid">
+      {% if row %}
+      <div class="field">
+        <label>Course code</label>
+        <input type="text" value="{{ row.course_code }}" disabled>
+        <div class="help-text">Auto-generated, cannot be changed.</div>
+      </div>
+      <div></div>
+      {% endif %}
+      <div class="field full">
+        <label>Title <span class="req">*</span></label>
+        <input type="text" name="title" value="{{ row.title if row else '' }}" required>
+      </div>
+      <div class="field full">
+        <label>Description</label>
+        <textarea name="description">{{ row.description if row else '' }}</textarea>
+      </div>
+      <div class="field">
+        <label>Category</label>
+        <input type="text" name="category" value="{{ row.category if row else '' }}" placeholder="e.g. Compliance, Technical, Soft Skills">
+      </div>
+      <div class="field">
+        <label>Duration (hours) <span class="req">*</span></label>
+        <input type="number" step="0.5" min="0" name="duration_hours" value="{{ row.duration_hours if row else 1 }}" required>
+      </div>
+      <div class="field">
+        <label>Trainer name</label>
+        <input type="text" name="trainer_name" value="{{ row.trainer_name if row else '' }}">
+      </div>
+      <div class="field">
+        <label>Delivery mode</label>
+        <select name="delivery_mode">
+          {% for m in modes %}
+          <option value="{{ m }}" {{ 'selected' if (row and row.delivery_mode == m) or (not row and m == 'Online') }}>{{ m }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Status</label>
+        <div class="checkbox-row"><input type="checkbox" name="is_active" {{ 'checked' if not row or row.is_active }}> <span class="help-text">Active / open for scheduling</span></div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">{{ 'Save changes' if row else 'Create course' }}</button>
+      {% if row %}
+      <a class="btn" href="{{ url_for('learning.course_view', id=row.id) }}">Cancel</a>
+      {% else %}
+      <a class="btn" href="{{ url_for('learning.courses_list') }}">Cancel</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

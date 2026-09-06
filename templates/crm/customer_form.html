@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}New Customer{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('crm.customers_list') }}">Customers</a> / New</div>
+<div class="page-head"><div><h1>New Customer</h1></div></div>
+
+<div class="card card-pad" style="max-width:880px">
+  <form method="post">
+    <div class="form-grid">
+      <div class="field">
+        <label>Name <span class="req">*</span></label>
+        <input type="text" name="name" required>
+      </div>
+      <div class="field">
+        <label>Industry</label>
+        <input type="text" name="industry">
+      </div>
+      <div class="field">
+        <label>Phone</label>
+        <input type="tel" name="phone">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" name="email">
+      </div>
+      <div class="field">
+        <label>City</label>
+        <input type="text" name="city">
+      </div>
+      <div class="field full">
+        <label>Address</label>
+        <textarea name="address"></textarea>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Create Customer</button>
+      <a class="btn" href="{{ url_for('crm.customers_list') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

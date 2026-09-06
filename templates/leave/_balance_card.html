@@ -1,0 +1,18 @@
+{% import "partials/icons.html" as ic %}
+{% if balance_rows %}
+<div class="card card-pad" style="margin-bottom:18px">
+  <h3 style="margin-bottom:12px">My Leave Balance ({{ current_year if current_year is defined else '' }})</h3>
+  <div class="grid grid-3">
+    {% for b in balance_rows %}
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px">
+        <span style="font-weight:650">{{ b.leave_type_name }}</span>
+        <span class="text-muted">{{ b.used }} / {{ b.allocated }} used</span>
+      </div>
+      <div class="progress"><div class="bar" style="width:{{ ((b.used / b.allocated * 100) if b.allocated else 0)|round(1) }}%"></div></div>
+      <div class="text-muted" style="font-size:11.5px;margin-top:4px">{{ b.balance }} day(s) remaining</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}

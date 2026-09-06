@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Goal' if goal else 'New Goal' }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('performance.goals_list') }}">Goals</a> / {{ 'Edit' if goal else 'New' }}</div>
+<div class="page-head"><div><h1>{{ 'Edit Goal' if goal else 'New Goal' }}</h1></div></div>
+
+<div class="card card-pad" style="max-width:880px">
+  <form method="post">
+    <div class="form-grid">
+      <div class="field">
+        <label>Employee <span class="req">*</span></label>
+        <select name="employee_id" {{ 'disabled' if goal }} required>
+          {% for eid, ename in employees %}
+          <option value="{{ eid }}" {{ 'selected' if (goal and goal.employee_id==eid) or (not goal and g.employee and g.employee.id==eid) }}>{{ ename }}</option>
+          {% endfor %}
+        </select>
+        {% if goal %}<input type="hidden" name="employee_id" value="{{ goal.employee_id }}">{% endif %}
+      </div>
+      <div class="field">
+        <label>Appraisal Cycle <span class="req">*</span></label>
+        <select name="cycle_id" {{ 'disabled' if goal }} required>
+          <option value="">— Select —</option>
+          {% for cid, cname in cycles %}
+          <option value="{{ cid }}" {{ 'selected' if goal and goal.cycle_id==cid }}>{{ cname }}</option>
+          {% endfor %}
+        </select>
+        {% if goal %}<input type="hidden" name="cycle_id" value="{{ goal.cycle_id }}">{% endif %}
+      </div>
+      <div class="field full">
+        <label>Title <span class="req">*</span></label>
+        <input type="text" name="title" value="{{ goal.title if goal else '' }}" required>
+      </div>
+      <div class="field full">
+        <label>Description</label>
+        <textarea name="description">{{ goal.description if goal else '' }}</textarea>
+      </div>
+      <div class="field">
+        <label>KRA</label>
+        <input type="text" name="kra" value="{{ goal.kra if goal else '' }}" placeholder="Key Result Area">
+      </div>
+      <div class="field">
+        <label>Weight (%)</label>
+        <input type="number" step="any" name="weight_pct" value="{{ goal.weight_pct if goal else 0 }}">
+      </div>
+      <div class="field full">
+        <label>Target</label>
+        <input type="text" name="target" value="{{ goal.target if goal else '' }}">
+      </div>
+      {% if goal %}
+      <div class="field">
+        <label>Status</label>
+        <select name="status">
+          {% for s in statuses %}<option value="{{ s }}" {{ 'selected' if s==goal.status }}>{{ s }}</option>{% endfor %}
+        </select>
+      </div>
+      {% if is_owner %}
+      <div class="field">
+        <label>Self Rating (1-5)</label>
+        <select name="self_rating">
+          <option value="">— Not rated —</option>
+          {% for i in range(1,6) %}<option value="{{ i }}" {{ 'selected' if goal.self_rating==i }}>{{ i }}</option>{% endfor %}
+        </select>
+      </div>
+      {% endif %}
+      {% if view_all %}
+      <div class="field">
+        <label>Manager Rating (1-5)</label>
+        <select name="manager_rating">
+          <option value="">— Not rated —</option>
+          {% for i in range(1,6) %}<option value="{{ i }}" {{ 'selected' if goal.manager_rating==i }}>{{ i }}</option>{% endfor %}
+        </select>
+      </div>
+      {% endif %}
+      {% endif %}
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">{{ 'Save changes' if goal else 'Create Goal' }}</button>
+      <a class="btn" href="{{ url_for('performance.goals_list') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

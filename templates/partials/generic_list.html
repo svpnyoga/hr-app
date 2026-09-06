@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}{{ cfg.name_plural }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ cfg.name_plural }}</h1>
+    <div class="sub">{{ total }} record{{ 's' if total != 1 else '' }} total</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    {% if can_export %}
+    <a class="btn" href="?{{ request.query_string.decode() }}{{ '&' if request.query_string else '' }}export=csv">{{ ic.icon('download',15) }} Export CSV</a>
+    {% endif %}
+    {% if can_create %}
+    <a class="btn primary" href="{{ url_for(request.blueprint + '.' + cfg.key + '_new') }}">{{ ic.icon('plus',15) }} New {{ cfg.name_singular }}</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-pad" style="padding-bottom:0">
+    <form class="toolbar" method="get">
+      <div class="search-box">
+        {{ ic.icon('search',13) }}
+        <input type="text" name="q" value="{{ q }}" placeholder="Search {{ cfg.name_plural|lower }}...">
+      </div>
+      <button class="btn sm" type="submit">Search</button>
+      {% if q %}<a class="btn sm ghost" href="{{ url_for(request.blueprint + '.' + cfg.key + '_list') }}">Clear</a>{% endif %}
+    </form>
+  </div>
+  <div class="table-wrap">
+    {% if rows %}
+    <table class="dt">
+      <thead><tr>
+        {% for f in list_fields %}<th>{{ f.label }}</th>{% endfor %}
+        <th style="text-align:right">Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          {% for f in list_fields %}
+          <td>
+            {% if f.fk_table %}{{ row[f.name + '__label'] or '—' }}
+            {% elif f.type == 'checkbox' %}<span class="badge {{ 'green' if row[f.name] else 'gray' }}">{{ 'Yes' if row[f.name] else 'No' }}</span>
+            {% elif f.name == 'status' or f.name == 'stage' %}<span class="badge {{ status_badge_class(row[f.name]) }}">{{ row[f.name] }}</span>
+            {% elif f.type == 'date' %}{{ row[f.name]|fmt_date }}
+            {% elif 'price' in f.name or 'total' in f.name or 'amount' in f.name or 'value' in f.name or 'salary' in f.name or 'limit' in f.name %}{{ row[f.name]|money }}
+            {% else %}{{ row[f.name] if row[f.name] is not none else '—' }}
+            {% endif %}
+          </td>
+          {% endfor %}
+          <td>
+            <div class="row-actions">
+              <a class="btn sm btn-icon" href="{{ url_for(request.blueprint + '.' + cfg.key + '_view', id=row.id) }}" title="View">{{ ic.icon('eye',14) }}</a>
+              {% if can_edit %}<a class="btn sm btn-icon" href="{{ url_for(request.blueprint + '.' + cfg.key + '_edit', id=row.id) }}" title="Edit">{{ ic.icon('pencil',14) }}</a>{% endif %}
+              {% if can_delete %}
+              <form method="post" action="{{ url_for(request.blueprint + '.' + cfg.key + '_delete', id=row.id) }}" onsubmit="return confirmDelete(this, 'Delete this {{ cfg.name_singular|lower }}? This cannot be undone.')">
+                <button class="btn sm btn-icon" type="submit" title="Delete">{{ ic.icon('trash',14) }}</button>
+              </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="ic">{{ ic.icon('package', 34) }}</div>
+      <p>No {{ cfg.name_plural|lower }} found{{ ' for "%s"'|format(q) if q else '' }}.</p>
+    </div>
+    {% endif %}
+  </div>
+  <div class="card-pad" style="padding-top:12px">
+    {% include "partials/pagination.html" %}
+  </div>
+</div>
+{% endblock %}

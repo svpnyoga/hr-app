@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}{{ report_title }}{% endblock %}
+
+{% macro render_cell(col, row) %}
+  {%- set value = row.get(col.key) -%}
+  {%- if col.type == 'employee' -%}
+    {%- if value -%}<a href="{{ url_for('employees.view', id=value.id) }}">{{ value.name }}</a> <span class="text-muted" style="font-size:11px">({{ value.code }})</span>
+    {%- else -%}—{%- endif -%}
+  {%- elif col.type == 'badge' -%}
+    {%- if value is not none and value != '' -%}<span class="badge {{ status_badge_class(value) }}">{{ value }}</span>{%- else -%}—{%- endif -%}
+  {%- elif col.type == 'date' -%}
+    {{ value|fmt_date if value else '—' }}
+  {%- elif col.type == 'money' -%}
+    {{ value|money if value is not none else '—' }}
+  {%- elif col.type == 'pct' -%}
+    {{ '%.1f'|format(value or 0) }}%
+  {%- elif col.type == 'number' -%}
+    {{ value if value is not none else 0 }}
+  {%- else -%}
+    {{ value if value is not none and value != '' else '—' }}
+  {%- endif -%}
+{% endmacro %}
+
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('reports.index') }}">Reports</a> / {{ report_title }}</div>
+<div class="page-head">
+  <div>
+    <h1>{{ report_title }}</h1>
+    <div class="sub">{{ report_subtitle }}</div>
+  </div>
+  <div class="actions">
+    {% if can_export %}
+    <a class="btn" href="?{{ request.query_string.decode() }}{{ '&' if request.query_string else '' }}export=csv">{{ ic.icon('download',15) }} Export CSV</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if filters %}
+<div class="card card-pad" style="margin-bottom:16px">
+  <form class="toolbar" method="get">
+    {% for f in filters %}
+      {% if f.type == 'select' %}
+      <select class="filter-select" name="{{ f.name }}">
+        <option value="">{{ f.all_label }}</option>
+        {% for val, label in f.options %}
+        <option value="{{ val }}" {{ 'selected' if f.value|string == val|string }}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      {% elif f.type == 'date' %}
+      <input type="date" name="{{ f.name }}" value="{{ f.value }}" placeholder="{{ f.label }}">
+      {% else %}
+      <input type="text" name="{{ f.name }}" value="{{ f.value }}" placeholder="{{ f.label }}">
+      {% endif %}
+    {% endfor %}
+    <button class="btn primary sm" type="submit">Apply</button>
+    <a class="btn ghost sm" href="{{ request.path }}">Clear</a>
+  </form>
+</div>
+{% endif %}
+
+{% if kpis %}
+<div class="kpi-grid" style="margin-bottom:18px">
+  {% for k in kpis %}
+  <div class="kpi-tile">
+    <div class="icon" style="background:{{ k.bg }};color:{{ k.fg }}">{{ ic.icon(k.icon, 17) }}</div>
+    <div><div class="value">{{ k.value }}</div><div class="label">{{ k.label }}</div></div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if chart %}
+<div class="card card-pad" style="margin-bottom:18px">
+  <h3 style="margin-bottom:10px">{{ chart.title }}</h3>
+  <svg id="{{ chart.svg_id }}" style="width:100%;height:{{ chart.height or 240 }}px"></svg>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="table-wrap">
+    {% if rows %}
+    <table class="dt">
+      <thead><tr>{% for c in columns %}<th>{{ c.label }}</th>{% endfor %}</tr></thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>{% for c in columns %}<td>{{ render_cell(c, row) }}</td>{% endfor %}</tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="ic">{{ ic.icon('chart', 34) }}</div>
+      <p>No data found for the selected filters.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% for t in extra_tables %}
+<div class="card" style="margin-top:18px">
+  <div class="card-head"><h3>{{ t.title }}</h3></div>
+  <div class="table-wrap">
+    {% if t.rows %}
+    <table class="dt">
+      <thead><tr>{% for c in t.columns %}<th>{{ c.label }}</th>{% endfor %}</tr></thead>
+      <tbody>
+        {% for row in t.rows %}
+        <tr>{% for c in t.columns %}<td>{{ render_cell(c, row) }}</td>{% endfor %}</tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state"><p>No data.</p></div>
+    {% endif %}
+  </div>
+</div>
+{% endfor %}
+
+{% endblock %}
+
+{% block scripts %}
+{% if chart %}
+<script>
+{% if chart.type == 'donut' %}
+drawDonutChart({{ chart.svg_id|tojson }}, {{ chart.data|tojson }});
+{% elif chart.type == 'line' %}
+drawLineChart({{ chart.svg_id|tojson }}, {{ chart.data|tojson }});
+{% else %}
+drawBarChart({{ chart.svg_id|tojson }}, {{ chart.data|tojson }});
+{% endif %}
+</script>
+{% endif %}
+{% endblock %}

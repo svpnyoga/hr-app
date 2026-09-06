@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Leave Calendar{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Leave Calendar</h1>
+    <div class="sub">{{ month_name }} {{ year }}</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <a class="btn" href="{{ url_for('leave.calendar', month=prev_month, year=prev_year) }}">{{ ic.icon('chev',15) }}</a>
+    <a class="btn" href="{{ url_for('leave.calendar') }}">Today</a>
+    <a class="btn" href="{{ url_for('leave.calendar', month=next_month, year=next_year) }}" style="transform:scaleX(-1)">{{ ic.icon('chev',15) }}</a>
+    <a class="btn primary" href="{{ url_for('leave.requests_list') }}">{{ ic.icon('umbrella',15) }} Requests</a>
+  </div>
+</div>
+
+<div class="card card-pad">
+  <table style="width:100%;border-collapse:collapse;table-layout:fixed">
+    <thead>
+      <tr>
+        {% for wd in ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] %}
+        <th style="padding:8px;font-size:11px;text-transform:uppercase;color:var(--text-muted);text-align:left">{{ wd }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for week in weeks %}
+      <tr>
+        {% for day in week %}
+        <td style="vertical-align:top;height:110px;border:1px solid var(--border);padding:6px;{{ 'background:var(--surface-2)' if day and day == today.day and month == today.month and year == today.year }}">
+          {% if day %}
+          <div style="font-size:12px;font-weight:650;margin-bottom:5px">{{ day }}</div>
+          {% set info = days_info[day] %}
+          {% if info.holiday %}
+          <div class="badge gray" style="display:block;margin-bottom:3px;white-space:normal">{{ ic.icon('flag',11) }} {{ info.holiday }}</div>
+          {% endif %}
+          {% for chip in info.leaves[:3] %}
+          <div class="badge indigo" style="display:block;margin-bottom:3px;white-space:normal;font-size:10.5px">{{ chip }}</div>
+          {% endfor %}
+          {% if info.leaves|length > 3 %}
+          <div class="text-muted" style="font-size:10.5px">+{{ info.leaves|length - 3 }} more</div>
+          {% endif %}
+          {% endif %}
+        </td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

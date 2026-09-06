@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}New Payroll Run{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('payroll.runs_list') }}">Payroll Runs</a> / New</div>
+<div class="page-head"><div><h1>New Payroll Run</h1><div class="sub">Generates a payslip for every active employee with an active salary structure.</div></div></div>
+
+<div class="card card-pad" style="max-width:560px">
+  <form method="post">
+    <div class="form-grid">
+      <div class="field">
+        <label>Month <span class="req">*</span></label>
+        <select name="period_month" required>
+          {% for num, name in months %}
+          <option value="{{ num }}" {{ 'selected' if num == today.month }}>{{ name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Year <span class="req">*</span></label>
+        <select name="period_year" required>
+          {% for y in years %}
+          <option value="{{ y }}" {{ 'selected' if y == today.year }}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Generate Payroll Run</button>
+      <a class="btn" href="{{ url_for('payroll.runs_list') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

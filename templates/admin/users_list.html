@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Users{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('admin.settings') }}">Administration</a> / Users</div>
+<div class="page-head">
+  <div>
+    <h1>Users</h1>
+    <div class="sub">{{ rows|length }} user account{{ 's' if rows|length != 1 else '' }}</div>
+  </div>
+  {% if can_create %}
+  <a class="btn primary" href="{{ url_for('admin.user_new') }}">{{ ic.icon('plus',15) }} New User</a>
+  {% endif %}
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    {% if rows %}
+    <table class="dt">
+      <thead><tr>
+        <th>Username</th><th>Full Name</th><th>Role</th><th>Linked Employee</th>
+        <th>Status</th><th>Last Login</th><th style="text-align:right">Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for u in rows %}
+        <tr>
+          <td>{{ u.username }}</td>
+          <td>{{ u.full_name }}</td>
+          <td><span class="badge brand">{{ u.role_name }}</span></td>
+          <td>{{ u.employee_name or '—' }}</td>
+          <td><span class="badge {{ 'green' if u.is_active else 'gray' }}">{{ 'Active' if u.is_active else 'Inactive' }}</span></td>
+          <td>{{ u.last_login_at|fmt_datetime if u.last_login_at else '—' }}</td>
+          <td>
+            <div class="row-actions">
+              {% if can_edit %}<a class="btn sm btn-icon" href="{{ url_for('admin.user_edit', id=u.id) }}" title="Edit">{{ ic.icon('pencil',14) }}</a>{% endif %}
+              {% if can_delete %}
+              <form method="post" action="{{ url_for('admin.user_deactivate', id=u.id) }}" onsubmit="return confirmDelete(this, '{{ 'Deactivate' if u.is_active else 'Activate' }} user {{ u.username }}?')">
+                <button class="btn sm btn-icon" type="submit" title="{{ 'Deactivate' if u.is_active else 'Activate' }}">{{ ic.icon('close' if u.is_active else 'check',14) }}</button>
+              </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state"><div class="ic">{{ ic.icon('users',34) }}</div><p>No users found.</p></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

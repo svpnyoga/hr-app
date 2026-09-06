@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}My Learning{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>My learning</h1>
+    <div class="sub">{{ rows|length }} enrollment{{ 's' if rows|length != 1 else '' }}</div>
+  </div>
+  <a class="btn primary" href="{{ url_for('learning.courses_list') }}">{{ ic.icon('graduation',15) }} Browse courses</a>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    {% if rows %}
+    <table class="dt">
+      <thead><tr>
+        <th>Course</th><th>Category</th><th>Session date</th><th>Session status</th><th>My attendance</th><th>Score</th><th>Certificate</th>
+      </tr></thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td><a href="{{ url_for('learning.course_view', id=r.course_id) }}">{{ r.course_title }}</a></td>
+          <td>{{ r.category or '—' }}</td>
+          <td>{{ r.session_date|fmt_date }}</td>
+          <td><span class="badge {{ status_badge_class(r.session_status) }}">{{ r.session_status }}</span></td>
+          <td><span class="badge {{ status_badge_class(r.attendance_status) }}">{{ r.attendance_status }}</span></td>
+          <td>{{ r.assessment_score if r.assessment_score is not none else '—' }}</td>
+          <td><span class="badge {{ 'green' if r.certificate_issued else 'gray' }}">{{ 'Yes' if r.certificate_issued else 'No' }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="ic">{{ ic.icon('graduation', 34) }}</div>
+      <p>You haven't enrolled in any training sessions yet.</p>
+      <a class="btn primary" style="margin-top:12px" href="{{ url_for('learning.courses_list') }}">Browse courses</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}{{ cand.full_name }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('recruitment.candidates_list') }}">Candidates</a> / {{ cand.candidate_code }}</div>
+<div class="page-head">
+  <div>
+    <h1>{{ cand.full_name }}</h1>
+    <div class="sub">{{ cand.candidate_code }}</div>
+  </div>
+  {% if cand.resume_path %}
+  <a class="btn" href="{{ url_for('static', filename='uploads/' + cand.resume_path) }}" target="_blank">{{ ic.icon('download',15) }} View resume</a>
+  {% endif %}
+</div>
+
+<div class="detail-grid">
+  <div class="card card-pad">
+    <h3 style="margin-bottom:14px">Details</h3>
+    <div class="kv">
+      <div class="k">Email</div><div>{{ cand.email or '—' }}</div>
+      <div class="k">Phone</div><div>{{ cand.phone or '—' }}</div>
+      <div class="k">Experience</div><div>{{ (cand.total_experience_years ~ ' years') if cand.total_experience_years is not none else '—' }}</div>
+      <div class="k">Current Company</div><div>{{ cand.current_company or '—' }}</div>
+      <div class="k">Current Designation</div><div>{{ cand.current_designation or '—' }}</div>
+      <div class="k">Current Salary</div><div>{{ cand.current_salary|money if cand.current_salary is not none else '—' }}</div>
+      <div class="k">Expected Salary</div><div>{{ cand.expected_salary|money if cand.expected_salary is not none else '—' }}</div>
+      <div class="k">Notice Period</div><div>{{ (cand.notice_period_days ~ ' days') if cand.notice_period_days is not none else '—' }}</div>
+      <div class="k">Qualification</div><div>{{ cand.qualification or '—' }}</div>
+      <div class="k">Skills</div><div>{{ cand.skills or '—' }}</div>
+      <div class="k">Source</div><div>{{ cand.source or '—' }}</div>
+      <div class="k">Added</div><div>{{ cand.created_at|fmt_datetime }}</div>
+    </div>
+  </div>
+
+  <div class="card card-pad">
+    <h3 style="margin-bottom:10px">Apply to another requisition</h3>
+    {% if can_apply and available_requisitions %}
+    <form method="post" action="{{ url_for('recruitment.application_new') }}" class="form-grid" style="grid-template-columns:1fr">
+      <input type="hidden" name="candidate_id" value="{{ cand.id }}">
+      <div class="field">
+        <select name="requisition_id" required>
+          <option value="">— Select requisition —</option>
+          {% for r in available_requisitions %}<option value="{{ r.id }}">{{ r.requisition_number }} — {{ r.title }}</option>{% endfor %}
+        </select>
+      </div>
+      <button class="btn primary sm" type="submit">Apply</button>
+    </form>
+    {% elif not available_requisitions %}
+    <p class="text-muted" style="font-size:12.5px">No open requisitions this candidate hasn't already applied to.</p>
+    {% else %}
+    <p class="text-muted" style="font-size:12.5px">You don't have permission to create applications.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card" style="margin-top:18px">
+  <div class="card-pad" style="padding-bottom:0"><h3>Applications ({{ applications|length }})</h3></div>
+  <div class="table-wrap">
+    {% if applications %}
+    <table class="dt">
+      <thead><tr><th>Requisition</th><th>Stage</th><th>Applied</th><th style="text-align:right">Actions</th></tr></thead>
+      <tbody>
+        {% for a in applications %}
+        <tr>
+          <td>
+            <div style="font-weight:650">{{ a.requisition_title }}</div>
+            <div class="text-muted" style="font-size:11.5px">{{ a.requisition_number }}</div>
+          </td>
+          <td><span class="badge {{ status_badge_class(a.stage) }}">{{ a.stage }}</span></td>
+          <td>{{ a.applied_date|fmt_date }}</td>
+          <td>
+            <div class="row-actions">
+              <a class="btn sm btn-icon" href="{{ url_for('recruitment.application_view', id=a.id) }}" title="View">{{ ic.icon('eye',14) }}</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state"><div class="ic">{{ ic.icon('briefcase', 30) }}</div><p>This candidate hasn't applied to any requisition yet.</p></div>
+    {% endif %}
+  </div>
+  <div class="card-pad"></div>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}New Requisition{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('recruitment.requisitions_list') }}">Job Requisitions</a> / New</div>
+<div class="page-head"><div><h1>New Job Requisition</h1></div></div>
+
+<div class="card card-pad" style="max-width:880px">
+  <form method="post">
+    <div class="form-grid">
+      <div class="field full">
+        <label>Title <span class="req">*</span></label>
+        <input type="text" name="title" required>
+      </div>
+      <div class="field">
+        <label>Department</label>
+        <select name="department_id">
+          <option value="">— Select —</option>
+          {% for d in departments %}<option value="{{ d.id }}">{{ d.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Designation</label>
+        <select name="designation_id">
+          <option value="">— Select —</option>
+          {% for d in designations %}<option value="{{ d.id }}">{{ d.title }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Location</label>
+        <select name="location_id">
+          <option value="">— Select —</option>
+          {% for l in locations %}<option value="{{ l.id }}">{{ l.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Number of Openings</label>
+        <input type="number" name="num_openings" min="1" step="1" value="1">
+      </div>
+      <div class="field">
+        <label>Employment Type</label>
+        <select name="employment_type">
+          <option value="Full-time">Full-time</option>
+          <option value="Part-time">Part-time</option>
+          <option value="Contract">Contract</option>
+          <option value="Intern">Intern</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Experience Required</label>
+        <input type="text" name="experience_required" placeholder="e.g. 3-5 years">
+      </div>
+      <div class="field full">
+        <label>Description</label>
+        <textarea name="description" rows="5"></textarea>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Create Requisition</button>
+      <a class="btn" href="{{ url_for('recruitment.requisitions_list') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

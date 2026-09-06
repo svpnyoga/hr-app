@@ -1,0 +1,534 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}{{ emp.first_name }} {{ emp.last_name }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('employees.list_view') }}">Employees</a> / {{ emp.first_name }} {{ emp.last_name }}</div>
+
+<div class="profile-head">
+  <div class="avatar xl">
+    {% if emp.photo_path %}<img src="{{ url_for('static', filename='uploads/' + emp.photo_path) }}">
+    {% else %}{{ (emp.first_name ~ ' ' ~ emp.last_name)|initials }}{% endif %}
+  </div>
+  <div style="flex:1;min-width:220px">
+    <div class="name">
+      {{ emp.first_name }} {{ emp.last_name }}
+      <span class="badge {{ status_badge_class(emp.employment_status) }}">{{ emp.employment_status }}</span>
+      <span class="badge {{ status_badge_class(emp.employment_type) }}">{{ emp.employment_type }}</span>
+    </div>
+    <div class="role">{{ emp.designation_name or 'No designation' }} @ {{ emp.department_name or 'No department' }} &middot; {{ emp.employee_code }}</div>
+    <div class="meta">
+      <span>{{ ic.icon('map-pin',13) }} {{ emp.location_name or 'No location' }}</span>
+      <span>{{ ic.icon('calendar',13) }} Joined {{ emp.date_of_joining|fmt_date }}</span>
+      <span>{{ ic.icon('user',13) }} {{ emp.manager_name or 'No manager' }}</span>
+      <span>{{ ic.icon('phone',13) }} {{ emp.work_phone or emp.personal_phone or '—' }}</span>
+      <span>{{ emp.work_email or emp.personal_email or '—' }}</span>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px">
+    {% if can_edit %}
+    <a class="btn" href="{{ url_for('employees.edit', id=emp.id) }}">{{ ic.icon('pencil',15) }} Edit</a>
+    {% endif %}
+    {% if can_delete and emp.employment_status not in ('Resigned', 'Terminated') %}
+    <form method="post" action="{{ url_for('employees.deactivate', id=emp.id) }}" onsubmit="return confirmDelete(this, 'Deactivate this employee? This sets their status to Resigned.')">
+      <input type="hidden" name="status" value="Resigned">
+      <button class="btn danger" type="submit">{{ ic.icon('trash',15) }} Deactivate</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+{% set tabs = [
+  ('profile', 'Personal Information'),
+  ('employment', 'Employment Information'),
+  ('contact', 'Contact Information'),
+  ('education', 'Education'),
+  ('experience', 'Experience'),
+  ('documents', 'Documents'),
+  ('attendance', 'Attendance'),
+  ('leave', 'Leave'),
+  ('payroll', 'Payroll'),
+  ('performance', 'Performance'),
+  ('training', 'Training'),
+  ('claims', 'Claims'),
+  ('assets', 'Assets'),
+  ('activity', 'Activity History'),
+] %}
+<div class="tabs">
+  {% for key, label in tabs %}
+  <a href="{{ url_for('employees.view', id=emp.id, tab=key) }}" class="{{ 'active' if tab==key }}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+{# ---------------- Personal Information ---------------- #}
+{% if tab == 'profile' %}
+<div class="card card-pad">
+  <h3 style="margin-bottom:14px">Personal Information</h3>
+  <div class="kv">
+    <div class="k">Full Name</div><div>{{ emp.first_name }} {{ emp.last_name }}</div>
+    <div class="k">Gender</div><div>{{ emp.gender or '—' }}</div>
+    <div class="k">Date of Birth</div><div>{{ emp.dob|fmt_date }}{% if emp.dob %} ({{ emp.dob|age_years }} yrs){% endif %}</div>
+    <div class="k">Marital Status</div><div>{{ emp.marital_status or '—' }}</div>
+    <div class="k">Blood Group</div><div>{{ emp.blood_group or '—' }}</div>
+    <div class="k">Personal Email</div><div>{{ emp.personal_email or '—' }}</div>
+    <div class="k">Personal Phone</div><div>{{ emp.personal_phone or '—' }}</div>
+    <div class="k">Emergency Contact</div>
+    <div>{{ emp.emergency_contact_name or '—' }}{% if emp.emergency_contact_phone %} &middot; {{ emp.emergency_contact_phone }}{% endif %}</div>
+  </div>
+</div>
+{% endif %}
+
+{# ---------------- Employment Information ---------------- #}
+{% if tab == 'employment' %}
+<div class="card card-pad">
+  <h3 style="margin-bottom:14px">Employment Information</h3>
+  <div class="kv">
+    <div class="k">Employee Code</div><div>{{ emp.employee_code }}</div>
+    <div class="k">Department</div><div>{{ emp.department_name or '—' }}</div>
+    <div class="k">Designation</div><div>{{ emp.designation_name or '—' }}</div>
+    <div class="k">Location</div><div>{{ emp.location_name or '—' }}</div>
+    <div class="k">Reporting Manager</div><div>{{ emp.manager_name or '—' }}</div>
+    <div class="k">Employment Type</div><div><span class="badge {{ status_badge_class(emp.employment_type) }}">{{ emp.employment_type }}</span></div>
+    <div class="k">Employment Status</div><div><span class="badge {{ status_badge_class(emp.employment_status) }}">{{ emp.employment_status }}</span></div>
+    <div class="k">Date of Joining</div><div>{{ emp.date_of_joining|fmt_date }}</div>
+    <div class="k">Date of Confirmation</div><div>{{ emp.date_of_confirmation|fmt_date }}</div>
+    <div class="k">Date of Exit</div><div>{{ emp.date_of_exit|fmt_date }}</div>
+    <div class="k">Work Email</div><div>{{ emp.work_email or '—' }}</div>
+    <div class="k">Work Phone</div><div>{{ emp.work_phone or '—' }}</div>
+    <div class="k">Login Account</div>
+    <div>
+      {% if user_account %}
+      <span class="badge {{ 'green' if user_account.is_active else 'gray' }}">{{ user_account.username }} &middot; {{ user_account.role_name }}</span>
+      {% else %}
+      <span class="badge gray">No login account</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{# ---------------- Contact Information ---------------- #}
+{% if tab == 'contact' %}
+<div class="card card-pad">
+  <h3 style="margin-bottom:14px">Contact Information</h3>
+  <div class="kv">
+    <div class="k">Current Address</div><div>{{ emp.current_address or '—' }}</div>
+    <div class="k">Permanent Address</div><div>{{ emp.permanent_address or '—' }}</div>
+    <div class="k">City</div><div>{{ emp.city or '—' }}</div>
+    <div class="k">State</div><div>{{ emp.state or '—' }}</div>
+    <div class="k">Country</div><div>{{ emp.country or '—' }}</div>
+    <div class="k">Pincode</div><div>{{ emp.pincode or '—' }}</div>
+  </div>
+</div>
+{% endif %}
+
+{# ---------------- Education ---------------- #}
+{% if tab == 'education' %}
+<div class="grid grid-2">
+  <div class="card card-pad">
+    <h3 style="margin-bottom:14px">Education</h3>
+    {% if education_rows %}
+      {% for e in education_rows %}
+      <div class="doc-row">
+        <div class="grow">
+          <div class="name">{{ e.degree }}{% if e.field_of_study %} — {{ e.field_of_study }}{% endif %}</div>
+          <div class="meta">{{ e.institution or 'Institution not specified' }} &middot; {{ e.start_year or '?' }}–{{ e.end_year or 'Present' }}{% if e.grade %} &middot; Grade: {{ e.grade }}{% endif %}</div>
+        </div>
+        {% if can_edit_profile %}
+        <form method="post" action="{{ url_for('employees.education_delete', id=e.id) }}" onsubmit="return confirmDelete(this, 'Remove this education record?')">
+          <button class="btn sm btn-icon" type="submit" title="Remove">{{ ic.icon('trash',13) }}</button>
+        </form>
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+    <div class="empty-state"><div class="ic">{{ ic.icon('book',30) }}</div><p>No education records yet.</p></div>
+    {% endif %}
+  </div>
+  {% if can_edit_profile %}
+  <div class="card card-pad">
+    <h3 style="margin-bottom:14px">Add Education</h3>
+    <form method="post" action="{{ url_for('employees.education_add', id=emp.id) }}">
+      <div class="form-grid">
+        <div class="field full"><label>Degree <span class="req">*</span></label><input type="text" name="degree" required></div>
+        <div class="field full"><label>Institution</label><input type="text" name="institution"></div>
+        <div class="field full"><label>Field of Study</label><input type="text" name="field_of_study"></div>
+        <div class="field"><label>Start Year</label><input type="number" name="start_year" min="1950" max="2100"></div>
+        <div class="field"><label>End Year</label><input type="number" name="end_year" min="1950" max="2100"></div>
+        <div class="field full"><label>Grade</label><input type="text" name="grade"></div>
+      </div>
+      <div class="form-actions"><button class="btn primary" type="submit">Add Education</button></div>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+{# ---------------- Experience ---------------- #}
+{% if tab == 'experience' %}
+<div class="grid grid-2">
+  <div class="card card-pad">
+    <h3 style="margin-bottom:14px">Experience</h3>
+    {% if experience_rows %}
+      {% for e in experience_rows %}
+      <div class="doc-row">
+        <div class="grow">
+          <div class="name">{{ e.designation or 'Employee' }} at {{ e.company_name }}</div>
+          <div class="meta">{{ e.start_date|fmt_date }} – {{ e.end_date|fmt_date if e.end_date else 'Present' }}{% if e.description %} &middot; {{ e.description }}{% endif %}</div>
+        </div>
+        {% if can_edit_profile %}
+        <form method="post" action="{{ url_for('employees.experience_delete', id=e.id) }}" onsubmit="return confirmDelete(this, 'Remove this experience record?')">
+          <button class="btn sm btn-icon" type="submit" title="Remove">{{ ic.icon('trash',13) }}</button>
+        </form>
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+    <div class="empty-state"><div class="ic">{{ ic.icon('briefcase',30) }}</div><p>No prior experience recorded yet.</p></div>
+    {% endif %}
+  </div>
+  {% if can_edit_profile %}
+  <div class="card card-pad">
+    <h3 style="margin-bottom:14px">Add Experience</h3>
+    <form method="post" action="{{ url_for('employees.experience_add', id=emp.id) }}">
+      <div class="form-grid">
+        <div class="field full"><label>Company Name <span class="req">*</span></label><input type="text" name="company_name" required></div>
+        <div class="field full"><label>Designation</label><input type="text" name="designation"></div>
+        <div class="field"><label>Start Date</label><input type="date" name="start_date"></div>
+        <div class="field"><label>End Date</label><input type="date" name="end_date"></div>
+        <div class="field full"><label>Description</label><textarea name="description"></textarea></div>
+      </div>
+      <div class="form-actions"><button class="btn primary" type="submit">Add Experience</button></div>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+{# ---------------- Documents ---------------- #}
+{% if tab == 'documents' %}
+<div class="grid grid-2">
+  <div class="card card-pad">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h3>Documents</h3>
+      {% if has_permission('documents.documents.view') %}
+      <a class="btn sm ghost" href="{{ url_for('documents.list_view', employee_id=emp.id) }}">HR Documents {{ ic.icon('arrow-right',12) }}</a>
+      {% endif %}
+    </div>
+    {% if can_view_documents %}
+      {% if document_rows %}
+        {% for d in document_rows %}
+        <div class="doc-row">
+          {{ ic.icon('file',16) }}
+          <div class="grow">
+            <div class="name">{{ d.title }} <span class="badge gray">{{ d.doc_type }}</span>{% if d.is_verified %} <span class="badge green">Verified</span>{% else %} <span class="badge amber">Unverified</span>{% endif %}</div>
+            <div class="meta">Uploaded {{ d.uploaded_at|fmt_date }}{% if d.expiry_date %} &middot; Expires {{ d.expiry_date|fmt_date }}{% endif %}</div>
+          </div>
+          {% if d.file_path %}<a class="btn sm btn-icon" href="{{ url_for('static', filename='uploads/' + d.file_path) }}" target="_blank" title="Download">{{ ic.icon('download',13) }}</a>{% endif %}
+          {% if can_delete_document %}
+          <form method="post" action="{{ url_for('employees.document_delete', id=d.id) }}" onsubmit="return confirmDelete(this, 'Delete this document?')">
+            <button class="btn sm btn-icon" type="submit" title="Delete">{{ ic.icon('trash',13) }}</button>
+          </form>
+          {% endif %}
+        </div>
+        {% endfor %}
+      {% else %}
+      <div class="empty-state"><div class="ic">{{ ic.icon('folder',30) }}</div><p>No documents uploaded yet.</p></div>
+      {% endif %}
+    {% else %}
+    <div class="empty-state"><p>You don't have permission to view documents.</p></div>
+    {% endif %}
+  </div>
+  {% if can_add_document %}
+  <div class="card card-pad">
+    <h3 style="margin-bottom:14px">Upload Document</h3>
+    <form method="post" action="{{ url_for('employees.document_add', id=emp.id) }}" enctype="multipart/form-data">
+      <div class="form-grid">
+        <div class="field full">
+          <label>Document Type <span class="req">*</span></label>
+          <select name="doc_type" required>
+            <option value="">— Select —</option>
+            {% for t in doc_types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field full"><label>Title <span class="req">*</span></label><input type="text" name="title" required></div>
+        <div class="field full"><label>File</label><input type="file" name="file"></div>
+        <div class="field full"><label>Expiry Date</label><input type="date" name="expiry_date"></div>
+      </div>
+      <div class="form-actions"><button class="btn primary" type="submit">Upload Document</button></div>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+{# ---------------- Attendance ---------------- #}
+{% if tab == 'attendance' %}
+<div class="card card-pad">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <h3>Recent Attendance</h3>
+    <a class="btn sm" href="{{ url_for('attendance.daily', employee_id=emp.id) }}">View all {{ ic.icon('arrow-right',13) }}</a>
+  </div>
+  {% if attendance_rows %}
+  <div class="table-wrap">
+    <table class="dt">
+      <thead><tr><th>Date</th><th>Status</th><th>Check In</th><th>Check Out</th><th>Work Hours</th><th>Late (min)</th></tr></thead>
+      <tbody>
+        {% for a in attendance_rows %}
+        <tr>
+          <td>{{ a.date|fmt_date }}</td>
+          <td><span class="badge {{ status_badge_class(a.status) }}">{{ a.status }}</span></td>
+          <td>{{ a.check_in|fmt_time }}</td>
+          <td>{{ a.check_out|fmt_time }}</td>
+          <td>{{ a.work_hours }}</td>
+          <td>{{ a.late_minutes }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state"><div class="ic">{{ ic.icon('clock',30) }}</div><p>No attendance records yet.</p></div>
+  {% endif %}
+</div>
+{% endif %}
+
+{# ---------------- Leave ---------------- #}
+{% if tab == 'leave' %}
+<div class="card card-pad">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <h3>Recent Leave Requests</h3>
+    <a class="btn sm" href="{{ url_for('leave.requests_list', employee_id=emp.id) }}">View all {{ ic.icon('arrow-right',13) }}</a>
+  </div>
+  {% if leave_rows %}
+  <div class="table-wrap">
+    <table class="dt">
+      <thead><tr><th>Request #</th><th>Type</th><th>From</th><th>To</th><th>Days</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for l in leave_rows %}
+        <tr>
+          <td>{{ l.request_number }}</td>
+          <td>{{ l.leave_type_name }}</td>
+          <td>{{ l.from_date|fmt_date }}</td>
+          <td>{{ l.to_date|fmt_date }}</td>
+          <td>{{ l.days }}</td>
+          <td><span class="badge {{ status_badge_class(l.status) }}">{{ l.status }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state"><div class="ic">{{ ic.icon('umbrella',30) }}</div><p>No leave requests yet.</p></div>
+  {% endif %}
+</div>
+{% endif %}
+
+{# ---------------- Payroll ---------------- #}
+{% if tab == 'payroll' %}
+<div class="card card-pad">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <h3>Recent Payslips</h3>
+    <a class="btn sm" href="{{ url_for('payroll.my_payslips', employee_id=emp.id) }}">View all {{ ic.icon('arrow-right',13) }}</a>
+  </div>
+  {% if payslip_rows %}
+  <div class="table-wrap">
+    <table class="dt">
+      <thead><tr><th>Run</th><th>Period</th><th>Gross Earnings</th><th>Deductions</th><th>Net Pay</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for p in payslip_rows %}
+        <tr>
+          <td>{{ p.run_number }}</td>
+          <td>{{ p.period_month }}/{{ p.period_year }}</td>
+          <td>{{ p.gross_earnings|money }}</td>
+          <td>{{ p.total_deductions|money }}</td>
+          <td>{{ p.net_pay|money }}</td>
+          <td><span class="badge {{ status_badge_class(p.status) }}">{{ p.status }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state"><div class="ic">{{ ic.icon('wallet',30) }}</div><p>No payslips generated yet.</p></div>
+  {% endif %}
+</div>
+{% endif %}
+
+{# ---------------- Performance ---------------- #}
+{% if tab == 'performance' %}
+<div class="grid grid-2">
+  <div class="card card-pad">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h3>Latest Appraisal</h3>
+      <a class="btn sm" href="{{ url_for('performance.cycles_list', employee_id=emp.id) }}">View all {{ ic.icon('arrow-right',13) }}</a>
+    </div>
+    {% if appraisal %}
+    <div class="kv">
+      <div class="k">Cycle</div><div>{{ appraisal.cycle_name }}</div>
+      <div class="k">Status</div><div><span class="badge {{ status_badge_class(appraisal.status) }}">{{ appraisal.status }}</span></div>
+      <div class="k">Final Rating</div><div>{% if appraisal.final_rating %}<span class="rating">{{ appraisal.final_rating }} / 5</span>{% else %}—{% endif %}</div>
+      <div class="k">Promotion</div><div>{{ 'Recommended' if appraisal.promotion_recommended else 'Not recommended' }}</div>
+      <div class="k">Increment</div><div>{% if appraisal.increment_recommended_pct %}{{ appraisal.increment_recommended_pct }}%{% else %}—{% endif %}</div>
+    </div>
+    {% else %}
+    <div class="empty-state"><div class="ic">{{ ic.icon('target',30) }}</div><p>No appraisals yet.</p></div>
+    {% endif %}
+  </div>
+  <div class="card card-pad">
+    <h3 style="margin-bottom:14px">Current Goals</h3>
+    {% if goal_rows %}
+      {% for gl in goal_rows %}
+      <div class="doc-row">
+        <div class="grow">
+          <div class="name">{{ gl.title }}</div>
+          <div class="meta">Weight {{ gl.weight_pct }}% &middot; <span class="badge {{ status_badge_class(gl.status) }}">{{ gl.status }}</span></div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+    <div class="empty-state"><p>No goals set yet.</p></div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{# ---------------- Training ---------------- #}
+{% if tab == 'training' %}
+<div class="card card-pad">
+  <h3 style="margin-bottom:14px">Training Enrollments</h3>
+  {% if training_rows %}
+  <div class="table-wrap">
+    <table class="dt">
+      <thead><tr><th>Course</th><th>Session Date</th><th>Status</th><th>Score</th><th>Certificate</th></tr></thead>
+      <tbody>
+        {% for t in training_rows %}
+        <tr>
+          <td>{{ t.course_title }}</td>
+          <td>{{ t.session_date|fmt_date }}</td>
+          <td><span class="badge {{ status_badge_class(t.attendance_status) }}">{{ t.attendance_status }}</span></td>
+          <td>{{ t.assessment_score if t.assessment_score is not none else '—' }}</td>
+          <td><span class="badge {{ 'green' if t.certificate_issued else 'gray' }}">{{ 'Issued' if t.certificate_issued else 'No' }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state"><div class="ic">{{ ic.icon('graduation',30) }}</div><p>No training enrollments yet.</p></div>
+  {% endif %}
+</div>
+{% endif %}
+
+{# ---------------- Claims ---------------- #}
+{% if tab == 'claims' %}
+<div class="card card-pad">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <h3>Recent Expense Claims</h3>
+    <a class="btn sm" href="{{ url_for('claims.claims_list', employee_id=emp.id) }}">View all {{ ic.icon('arrow-right',13) }}</a>
+  </div>
+  {% if claim_rows %}
+  <div class="table-wrap">
+    <table class="dt">
+      <thead><tr><th>Claim #</th><th>Type</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for c in claim_rows %}
+        <tr>
+          <td>{{ c.claim_number }}</td>
+          <td>{{ c.claim_type_name }}</td>
+          <td>{{ c.expense_date|fmt_date }}</td>
+          <td>{{ c.amount|money }}</td>
+          <td><span class="badge {{ status_badge_class(c.status) }}">{{ c.status }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state"><div class="ic">{{ ic.icon('credit-card',30) }}</div><p>No expense claims yet.</p></div>
+  {% endif %}
+</div>
+{% endif %}
+
+{# ---------------- Assets ---------------- #}
+{% if tab == 'assets' %}
+<div class="grid grid-2">
+  <div class="card card-pad">
+    <h3 style="margin-bottom:14px">Issued Assets</h3>
+    {% if can_view_assets %}
+      {% if asset_rows %}
+        {% for a in asset_rows %}
+        <div class="doc-row">
+          {{ ic.icon('package',16) }}
+          <div class="grow">
+            <div class="name">{{ a.asset_name }}{% if a.asset_tag %} <span class="badge gray">{{ a.asset_tag }}</span>{% endif %}</div>
+            <div class="meta">
+              Issued {{ a.issued_date|fmt_date }}{% if a.return_date %} &middot; Returned {{ a.return_date|fmt_date }}{% endif %}
+              {% if a.condition %} &middot; {{ a.condition }}{% endif %}
+              {% if a.remarks %} &middot; {{ a.remarks }}{% endif %}
+            </div>
+          </div>
+          {% if can_delete_asset %}
+          <form method="post" action="{{ url_for('employees.asset_delete', id=a.id) }}" onsubmit="return confirmDelete(this, 'Remove this asset record?')">
+            <button class="btn sm btn-icon" type="submit" title="Remove">{{ ic.icon('trash',13) }}</button>
+          </form>
+          {% endif %}
+        </div>
+        {% endfor %}
+      {% else %}
+      <div class="empty-state"><div class="ic">{{ ic.icon('package',30) }}</div><p>No assets issued yet.</p></div>
+      {% endif %}
+    {% else %}
+    <div class="empty-state"><p>You don't have permission to view assets.</p></div>
+    {% endif %}
+  </div>
+  {% if can_add_asset %}
+  <div class="card card-pad">
+    <h3 style="margin-bottom:14px">Issue Asset</h3>
+    <form method="post" action="{{ url_for('employees.asset_add', id=emp.id) }}">
+      <div class="form-grid">
+        <div class="field full"><label>Asset Name <span class="req">*</span></label><input type="text" name="asset_name" required></div>
+        <div class="field"><label>Asset Tag</label><input type="text" name="asset_tag"></div>
+        <div class="field">
+          <label>Condition</label>
+          <select name="condition">
+            <option value="">— Select —</option>
+            {% for c in asset_conditions %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field"><label>Issued Date</label><input type="date" name="issued_date"></div>
+        <div class="field"><label>Return Date</label><input type="date" name="return_date"></div>
+        <div class="field full"><label>Remarks</label><textarea name="remarks"></textarea></div>
+      </div>
+      <div class="form-actions"><button class="btn primary" type="submit">Issue Asset</button></div>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+{# ---------------- Activity History ---------------- #}
+{% if tab == 'activity' %}
+<div class="card card-pad">
+  <h3 style="margin-bottom:14px">Activity History</h3>
+  {% if activity_rows %}
+  <div class="hr-timeline">
+    {% for a in activity_rows %}
+    <div class="hr-timeline-item">
+      <div class="node">{{ ic.icon('history',11) }}</div>
+      <div class="card">
+        <div class="h">
+          <span>{{ a.action|capitalize }} &middot; {{ a.entity_type.split('.')[-1]|capitalize }}</span>
+          <span class="t">{{ a.created_at|fmt_datetime }}</span>
+        </div>
+        <div class="d">{{ a.details or '' }}{% if a.user_name %} — by {{ a.user_name }}{% endif %}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state"><div class="ic">{{ ic.icon('history',30) }}</div><p>No activity recorded yet.</p></div>
+  {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

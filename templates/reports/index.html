@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Reports &amp; Analytics{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Reports &amp; Analytics</h1>
+    <div class="sub">20 built-in reports across every module, each with filters and CSV export.</div>
+  </div>
+</div>
+
+{% for group in groups %}
+  {% set group_reports = reports|selectattr('group', 'equalto', group)|list %}
+  {% if group_reports %}
+  <h3 style="margin:22px 0 12px;font-size:13.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em">{{ group }}</h3>
+  <div class="grid grid-3">
+    {% for r in group_reports %}
+    <a class="card card-pad" href="{{ url_for(r.endpoint) }}" style="display:block">
+      <div class="ic-wrap" style="width:38px;height:38px;border-radius:10px;background:var(--brand-50);color:var(--brand-600);display:flex;align-items:center;justify-content:center;margin-bottom:12px">{{ ic.icon(r.icon, 19) }}</div>
+      <h3 style="font-size:14.5px">{{ r.title }}</h3>
+      <p class="text-muted" style="font-size:12.5px;line-height:1.5;margin-top:4px">{{ r.subtitle }}</p>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endfor %}
+{% endblock %}

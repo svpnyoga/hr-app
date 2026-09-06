@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}{{ cycle.name }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('performance.cycles_list') }}">Appraisal Cycles</a> / {{ cycle.name }}</div>
+<div class="page-head">
+  <div>
+    <h1>{{ cycle.name }}</h1>
+    <span class="badge {{ status_badge_class(cycle.status) }}">{{ cycle.status }}</span>
+  </div>
+  {% if can_edit %}
+  <form method="post" action="{{ url_for('performance.cycle_status', id=cycle.id) }}" style="display:flex;gap:8px">
+    <select name="status" class="filter-select">
+      {% for s in statuses %}<option value="{{ s }}" {{ 'selected' if s==cycle.status }}>{{ s }}</option>{% endfor %}
+    </select>
+    <button class="btn primary" type="submit">Update Status</button>
+  </form>
+  {% endif %}
+</div>
+
+<div class="kpi-grid" style="margin-bottom:18px">
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--blue-bg);color:var(--blue)">{{ ic.icon('calendar',18) }}</div>
+    <div><div class="value">{{ cycle.start_date|fmt_date }}</div><div class="label">Start Date</div></div>
+  </div>
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--amber-bg);color:var(--amber)">{{ ic.icon('calendar',18) }}</div>
+    <div><div class="value">{{ cycle.end_date|fmt_date }}</div><div class="label">End Date</div></div>
+  </div>
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--green-bg);color:var(--green)">{{ ic.icon('users',18) }}</div>
+    <div><div class="value">{{ appraisals|length }}</div><div class="label">Participants</div></div>
+  </div>
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--indigo-bg);color:var(--indigo)">{{ ic.icon('check',18) }}</div>
+    <div><div class="value">{{ appraisals|selectattr('status','equalto','Completed')|list|length }}</div><div class="label">Completed</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head"><h3>Participant Appraisals</h3></div>
+  <div class="table-wrap">
+    {% if appraisals %}
+    <table class="dt">
+      <thead><tr>
+        <th>Employee</th><th>Employee Code</th><th>Status</th><th>Final Rating</th>
+        <th style="text-align:right">Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for a in appraisals %}
+        <tr>
+          <td>{{ a.first_name }} {{ a.last_name }}</td>
+          <td>{{ a.employee_code }}</td>
+          <td><span class="badge {{ status_badge_class(a.status) }}">{{ a.status }}</span></td>
+          <td>
+            {% if a.final_rating %}
+            <span class="rating">{% for i in range(a.final_rating|round(0,'floor')|int) %}{{ ic.icon('star',13) }}{% endfor %}</span>
+            {{ a.final_rating }}
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            <div class="row-actions">
+              <a class="btn sm btn-icon" href="{{ url_for('performance.appraisal_view', id=a.id) }}" title="Open appraisal">{{ ic.icon('eye',14) }}</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="ic">{{ ic.icon('users', 34) }}</div>
+      <p>No active employees found to seed appraisals for this cycle.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

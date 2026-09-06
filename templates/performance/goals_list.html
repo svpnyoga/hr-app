@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Goals{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Goals</h1>
+    <div class="sub">{{ goals|length }} goal{{ 's' if goals|length != 1 else '' }}{{ '' if view_all else ' (your goals)' }}</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    {% if can_create %}
+    <a class="btn primary" href="{{ url_for('performance.goal_new') }}">{{ ic.icon('plus',15) }} New Goal</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-pad" style="padding-bottom:0">
+    <form class="toolbar" method="get">
+      <select name="cycle_id" class="filter-select" onchange="this.form.submit()">
+        <option value="">All Cycles</option>
+        {% for cid, cname in cycles %}<option value="{{ cid }}" {{ 'selected' if cycle_id==cid }}>{{ cname }}</option>{% endfor %}
+      </select>
+      {% if view_all %}
+      <select name="employee_id" class="filter-select" onchange="this.form.submit()">
+        <option value="">All Employees</option>
+        {% for eid, ename in employees %}<option value="{{ eid }}" {{ 'selected' if employee_id==eid }}>{{ ename }}</option>{% endfor %}
+      </select>
+      {% endif %}
+      <button class="btn sm" type="submit">Filter</button>
+      {% if cycle_id or employee_id %}<a class="btn sm ghost" href="{{ url_for('performance.goals_list') }}">Clear</a>{% endif %}
+    </form>
+  </div>
+  <div class="table-wrap">
+    {% if goals %}
+    <table class="dt">
+      <thead><tr>
+        {% if view_all %}<th>Employee</th>{% endif %}
+        <th>Cycle</th><th>Title</th><th>KRA</th><th>Weight</th><th>Status</th>
+        <th>Self Rating</th><th>Manager Rating</th>
+        <th style="text-align:right">Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for goal in goals %}
+        <tr>
+          {% if view_all %}<td>{{ goal.first_name }} {{ goal.last_name }}</td>{% endif %}
+          <td>{{ goal.cycle_name }}</td>
+          <td>{{ goal.title }}</td>
+          <td>{{ goal.kra or '—' }}</td>
+          <td>{{ goal.weight_pct }}%</td>
+          <td><span class="badge {{ status_badge_class(goal.status) }}">{{ goal.status }}</span></td>
+          <td>{% if goal.self_rating %}<span class="rating">{% for i in range(goal.self_rating) %}{{ ic.icon('star',12) }}{% endfor %}</span>{% else %}—{% endif %}</td>
+          <td>{% if goal.manager_rating %}<span class="rating">{% for i in range(goal.manager_rating) %}{{ ic.icon('star',12) }}{% endfor %}</span>{% else %}—{% endif %}</td>
+          <td>
+            <div class="row-actions">
+              {% if can_edit %}<a class="btn sm btn-icon" href="{{ url_for('performance.goal_edit', id=goal.id) }}" title="Edit">{{ ic.icon('pencil',14) }}</a>{% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="ic">{{ ic.icon('flag', 34) }}</div>
+      <p>No goals found.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

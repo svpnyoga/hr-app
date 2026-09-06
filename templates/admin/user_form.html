@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if row else 'New' }} User{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('admin.users_list') }}">Users</a> / {{ 'Edit' if row else 'New' }}</div>
+<div class="page-head"><div><h1>{{ 'Edit' if row else 'New' }} User</h1></div></div>
+
+<div class="card card-pad" style="max-width:880px">
+  <form method="post">
+    <div class="form-grid">
+      <div class="field">
+        <label>Username <span class="req">*</span></label>
+        <input type="text" name="username" value="{{ row.username if row else '' }}" required>
+      </div>
+      <div class="field">
+        <label>Full Name <span class="req">*</span></label>
+        <input type="text" name="full_name" value="{{ row.full_name if row else '' }}" required>
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" name="email" value="{{ row.email if row and row.email else '' }}">
+      </div>
+      <div class="field">
+        <label>Phone</label>
+        <input type="tel" name="phone" value="{{ row.phone if row and row.phone else '' }}">
+      </div>
+      <div class="field">
+        <label>Role <span class="req">*</span></label>
+        <select name="role_id" required>
+          <option value="">— Select —</option>
+          {% for r in roles %}
+          <option value="{{ r.id }}" {{ 'selected' if row and row.role_id==r.id }}>{{ r.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Linked Employee</label>
+        <select name="employee_id">
+          <option value="">— None —</option>
+          {% for e in employees %}
+          <option value="{{ e.id }}" {{ 'selected' if row and row.employee_id==e.id }}>{{ e.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Password {% if not row %}<span class="req">*</span>{% endif %}</label>
+        <input type="password" name="password" autocomplete="new-password" {{ 'required' if not row }}>
+        {% if row %}<div class="help-text">Leave blank to keep the current password.</div>{% endif %}
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">{{ 'Save changes' if row else 'Create User' }}</button>
+      <a class="btn" href="{{ url_for('admin.users_list') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

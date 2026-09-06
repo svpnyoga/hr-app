@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}{{ row.title }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('documents.list_view') }}">HR Documents</a> / {{ row.title }}</div>
+<div class="page-head">
+  <div>
+    <h1>{{ row.title }}</h1>
+    <div class="sub">{{ row.document_type_name }} &middot; {{ row.employee_name or 'Company-wide' }}</div>
+  </div>
+  <div class="actions">
+    <span class="badge {{ 'green' if row.is_verified else 'gray' }}">{{ 'Verified' if row.is_verified else 'Unverified' }}</span>
+    {% if row.expiry_date %}
+      {% set du = row.expiry_date|days_until %}
+      {% if du < 0 %}<span class="badge red">Expired</span>
+      {% elif du < 30 %}<span class="badge amber">Expires in {{ du }}d</span>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+
+<div class="detail-grid">
+  <div class="card card-pad">
+    <h3 style="margin-bottom:14px">Document details</h3>
+    <div class="kv">
+      <div class="k">Type</div><div>{{ row.document_type_name }}</div>
+      <div class="k">Employee</div>
+      <div>{% if row.employee_id %}<a href="{{ url_for('employees.view', id=row.employee_id) }}">{{ row.employee_name }}</a>{% else %}Company-wide{% endif %}</div>
+      <div class="k">Expiry date</div><div>{{ row.expiry_date|fmt_date if row.expiry_date else '—' }}</div>
+      <div class="k">Uploaded by</div><div>{{ row.uploaded_by_name or '—' }}</div>
+      <div class="k">Uploaded at</div><div>{{ row.uploaded_at|fmt_datetime }}</div>
+      <div class="k">Verified by</div><div>{{ row.verified_by_name or '—' }}</div>
+      <div class="k">Verified at</div><div>{{ row.verified_at|fmt_datetime }}</div>
+      <div class="k">File</div>
+      <div>
+        {% if row.file_path %}
+        <a class="btn sm" href="{{ url_for('static', filename='uploads/' + row.file_path) }}" target="_blank">{{ ic.icon('download',13) }} View / download</a>
+        {% else %}—{% endif %}
+      </div>
+    </div>
+
+    <div class="form-actions">
+      {% if can_verify %}
+      <form method="post" action="{{ url_for('documents.verify', id=row.id) }}" style="display:inline">
+        <button class="btn success" type="submit">{{ ic.icon('check',15) }} Mark verified</button>
+      </form>
+      {% endif %}
+      {% if can_delete %}
+      <form method="post" action="{{ url_for('documents.delete', id=row.id) }}" style="display:inline"
+            onsubmit="return confirmDelete(this, 'Delete document &quot;{{ row.title }}&quot;? This cannot be undone.')">
+        <button class="btn danger" type="submit">{{ ic.icon('trash',15) }} Delete</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card card-pad">
+    <h3 style="margin-bottom:10px">Record info</h3>
+    <div class="kv">
+      <div class="k">Record ID</div><div>#{{ row.id }}</div>
+      <div class="k">Uploaded</div><div>{{ row.uploaded_at|fmt_datetime }}</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

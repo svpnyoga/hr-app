@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+{% set donut_colors = ["#245b96", "#1d8f5e", "#e08327", "#cf4444", "#5b4fc4", "#6b7488"] %}
+
+<div class="page-head">
+  <div>
+    <h1>Dashboard</h1>
+    <div class="sub">Welcome back, {{ g.user.full_name if g.user else 'there' }}.</div>
+  </div>
+</div>
+
+{% if show_workforce_kpis or show_approvals_kpi or show_recruitment_kpi or show_payroll_kpi %}
+<div class="kpi-grid">
+  {% if show_workforce_kpis %}
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--blue-bg);color:var(--blue)">{{ ic.icon('users', 18) }}</div>
+    <div><div class="value">{{ total_employees }}</div><div class="label">Total Employees</div></div>
+  </div>
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--green-bg);color:var(--green)">{{ ic.icon('check', 18) }}</div>
+    <div><div class="value">{{ present_today }}</div><div class="label">Present Today</div></div>
+  </div>
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--red-bg);color:var(--red)">{{ ic.icon('close', 18) }}</div>
+    <div><div class="value">{{ absent_today }}</div><div class="label">Absent Today</div></div>
+  </div>
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--indigo-bg);color:var(--indigo)">{{ ic.icon('umbrella', 18) }}</div>
+    <div><div class="value">{{ on_leave_today }}</div><div class="label">On Leave Today</div></div>
+  </div>
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--accent-bg);color:var(--accent-600)">{{ ic.icon('badge', 18) }}</div>
+    <div><div class="value">{{ new_joiners }}</div><div class="label">New Joiners This Month</div></div>
+  </div>
+  {% endif %}
+
+  {% if show_approvals_kpi %}
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--amber-bg);color:var(--amber)">{{ ic.icon('clipboard-check', 18) }}</div>
+    <div><div class="value">{{ approvals_count }}</div><div class="label">Pending Approvals</div></div>
+  </div>
+  {% endif %}
+
+  {% if show_recruitment_kpi %}
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--blue-bg);color:var(--blue)">{{ ic.icon('briefcase', 18) }}</div>
+    <div><div class="value">{{ open_positions }}</div><div class="label">Open Positions</div></div>
+  </div>
+  {% endif %}
+
+  {% if show_payroll_kpi %}
+  <div class="kpi-tile">
+    <div class="icon" style="background:var(--green-bg);color:var(--green)">{{ ic.icon('wallet', 18) }}</div>
+    <div>
+      <div class="value">{{ payroll_summary.total_net|money if payroll_summary else '—' }}</div>
+      <div class="label">Latest Payroll Net{% if payroll_summary %} · {{ payroll_summary.run_number }}{% endif %}</div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% else %}
+<div class="card"><div class="empty-state">
+  <div class="ic">{{ ic.icon('grid', 34) }}</div>
+  <p>No dashboard widgets are available for your role yet. Check with your administrator if you believe this is a mistake.</p>
+</div></div>
+{% endif %}
+
+<div class="grid {{ 'grid-2' if show_workforce_kpis else '' }}" style="margin-top:16px">
+  {% if show_workforce_kpis %}
+  <div class="card">
+    <div class="card-head"><h3>Today's Attendance</h3></div>
+    <div class="card-pad">
+      {% if attendance_chart_data %}
+      <svg id="attendanceDonut" style="width:100%;height:220px"></svg>
+      <div class="chart-legend">
+        {% for d in attendance_chart_data %}
+        <div class="item"><span class="sw" style="background:{{ donut_colors[loop.index0 % (donut_colors|length)] }}"></span>{{ d.label }} ({{ d.value }})</div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state"><div class="ic">{{ ic.icon('clock', 34) }}</div><p>No attendance marked for today yet.</p></div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <div class="card-head"><h3>Recent Activity</h3></div>
+    <div class="card-pad">
+      {% if recent_activity %}
+      <div class="hr-timeline">
+        {% for a in recent_activity %}
+        <div class="hr-timeline-item">
+          <div class="node">{{ ic.icon('history', 11) }}</div>
+          <div class="card">
+            <div class="h"><span>{{ a.actor_name or 'System' }}</span><span class="t">{{ a.created_at|fmt_datetime }}</span></div>
+            <div class="d">{{ a.details or (a.action ~ ' · ' ~ a.entity_type) }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state"><p>No recent activity.</p></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="grid {{ 'grid-3' if show_workforce_kpis else '' }}" style="margin-top:16px">
+  {% if show_workforce_kpis %}
+  <div class="card">
+    <div class="card-head"><h3>{{ ic.icon('gift', 15) }} Upcoming Birthdays</h3></div>
+    <div class="card-pad">
+      {% if birthdays %}
+      {% for b in birthdays %}
+      <div style="display:flex;align-items:center;gap:10px;padding:7px 0;{{ 'border-top:1px solid var(--border)' if not loop.first }}">
+        <div class="avatar" style="background:linear-gradient(135deg,var(--brand-400),var(--brand-700))">{{ (b.row.first_name ~ ' ' ~ b.row.last_name)|initials }}</div>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:12.5px">{{ b.row.first_name }} {{ b.row.last_name }}</div>
+          <div class="text-muted" style="font-size:11.5px">{{ b.occurs_on.strftime('%d %b') }}</div>
+        </div>
+        <span class="badge {{ 'accent' if b.days_until == 0 else 'blue' }}">{{ 'Today' if b.days_until == 0 else (b.days_until ~ ' d') }}</span>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="empty-state"><p>No birthdays in the next 14 days.</p></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h3>{{ ic.icon('award', 15) }} Work Anniversaries</h3></div>
+    <div class="card-pad">
+      {% if anniversaries %}
+      {% for a in anniversaries %}
+      <div style="display:flex;align-items:center;gap:10px;padding:7px 0;{{ 'border-top:1px solid var(--border)' if not loop.first }}">
+        <div class="avatar" style="background:linear-gradient(135deg,var(--brand-400),var(--brand-700))">{{ (a.row.first_name ~ ' ' ~ a.row.last_name)|initials }}</div>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:12.5px">{{ a.row.first_name }} {{ a.row.last_name }}</div>
+          <div class="text-muted" style="font-size:11.5px">{{ a.occurs_on.strftime('%d %b') }} · {{ a.years }} yr{{ 's' if a.years != 1 }}</div>
+        </div>
+        <span class="badge {{ 'accent' if a.days_until == 0 else 'green' }}">{{ 'Today' if a.days_until == 0 else (a.days_until ~ ' d') }}</span>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="empty-state"><p>No work anniversaries in the next 14 days.</p></div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <div class="card-head"><h3>{{ ic.icon('calendar', 15) }} Upcoming Holidays</h3></div>
+    <div class="card-pad">
+      {% if holidays %}
+      {% for h in holidays %}
+      <div style="display:flex;align-items:center;gap:10px;padding:7px 0;{{ 'border-top:1px solid var(--border)' if not loop.first }}">
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:12.5px">{{ h.name }}</div>
+          <div class="text-muted" style="font-size:11.5px">{{ h.holiday_date|fmt_date }}{% if h.is_optional %} · Optional{% endif %}</div>
+        </div>
+        <span class="badge gray">{{ h.holiday_date|days_until }} d</span>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="empty-state"><p>No holidays scheduled.</p></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+{% if attendance_chart_data %}
+drawDonutChart('attendanceDonut', {{ attendance_chart_data|tojson }});
+{% endif %}
+</script>
+{% endblock %}

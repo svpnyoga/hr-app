@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Recruitment Pipeline{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Recruitment Pipeline</h1>
+    <div class="sub">{% if req %}{{ req.title }} ({{ req.requisition_number }}){% else %}All open and in-progress applications{% endif %}</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <form method="get" style="display:flex;gap:8px">
+      <select name="requisition_id" onchange="this.form.submit()">
+        <option value="">All requisitions</option>
+        {% for r in requisitions %}
+        <option value="{{ r.id }}" {{ 'selected' if requisition_id==r.id }}>{{ r.requisition_number }} — {{ r.title }}</option>
+        {% endfor %}
+      </select>
+    </form>
+    <a class="btn" href="{{ url_for('recruitment.requisitions_list') }}">{{ ic.icon('briefcase',15) }} Requisitions</a>
+  </div>
+</div>
+
+<div class="kanban">
+  {% for stage in stages %}
+  <div class="kanban-col" data-stage="{{ stage }}">
+    <h4>
+      <span>{{ stage }}</span>
+      <span class="badge {{ status_badge_class(stage) }}">{{ columns[stage]|length }}</span>
+    </h4>
+    {% for a in columns[stage] %}
+    <div class="kanban-card" draggable="{{ 'true' if can_edit else 'false' }}" data-id="{{ a.id }}" onclick="location.href='{{ url_for('recruitment.application_view', id=a.id) }}'">
+      <div class="name">{{ a.candidate_name }}</div>
+      <div class="text-muted" style="font-size:11.5px">{{ a.requisition_title }}</div>
+      <div class="meta">
+        <span>Applied {{ a.applied_date|fmt_date }}</span>
+        <span>{{ a.days_since_applied }}d</span>
+      </div>
+    </div>
+    {% else %}
+    <div class="text-muted" style="font-size:11.5px;padding:8px 2px">No candidates</div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if can_edit %}
+<script>
+(function(){
+  var url = "{{ url_for('recruitment.application_stage', id=1)|replace('/1/', '/__ID__/') }}";
+  initKanbanDnD(url);
+})();
+</script>
+{% endif %}
+{% endblock %}

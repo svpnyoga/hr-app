@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}New Survey{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('engagement.surveys_list') }}">Surveys</a> / New</div>
+<div class="page-head"><div><h1>New Survey</h1></div></div>
+
+<div class="card card-pad" style="max-width:920px">
+  <form method="post">
+    <div class="form-grid">
+      <div class="field full">
+        <label>Title <span class="req">*</span></label>
+        <input type="text" name="title" required placeholder="e.g. Q3 Pulse Check">
+      </div>
+      <div class="field full">
+        <label>Description</label>
+        <textarea name="description" placeholder="What is this survey about?"></textarea>
+      </div>
+      <div class="field">
+        <label>Type</label>
+        <select name="type">
+          {% for t in survey_types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Start Date</label>
+        <input type="date" name="start_date">
+      </div>
+      <div class="field">
+        <label>End Date</label>
+        <input type="date" name="end_date">
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <div class="checkbox-row">
+          <input type="checkbox" name="publish_now" id="publish_now">
+          <span class="help-text">Publish now (status = Active)</span>
+        </div>
+      </div>
+    </div>
+
+    <fieldset class="form-section-box" style="margin-top:18px">
+      <legend>Questions</legend>
+      <div id="questions-wrap"></div>
+      <button type="button" class="btn sm" onclick="addQuestion()">{{ ic.icon('plus',13) }} Add Question</button>
+    </fieldset>
+
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Create Survey</button>
+      <a class="btn" href="{{ url_for('engagement.surveys_list') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<template id="question-row-tpl">
+  <div class="card-pad" style="border:1px solid var(--border);border-radius:8px;margin-bottom:10px;position:relative">
+    <div class="form-grid">
+      <div class="field full">
+        <label>Question Text</label>
+        <input type="text" name="question_text[]" placeholder="Type your question...">
+      </div>
+      <div class="field">
+        <label>Answer Type</label>
+        <select name="question_type[]" onchange="toggleOptionsField(this)">
+          {% for qt in question_types %}<option value="{{ qt }}">{{ qt }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field mc-options" style="display:none">
+        <label>Choices (comma-separated)</label>
+        <input type="text" name="question_options[]" placeholder="Option A, Option B, Option C">
+      </div>
+    </div>
+    <button type="button" class="btn sm ghost" style="position:absolute;top:10px;right:10px" onclick="this.closest('.card-pad').remove()">{{ ic.icon('trash',13) }}</button>
+  </div>
+</template>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function addQuestion() {
+  const tpl = document.getElementById('question-row-tpl');
+  const wrap = document.getElementById('questions-wrap');
+  const clone = tpl.content.cloneNode(true);
+  wrap.appendChild(clone);
+}
+function toggleOptionsField(sel) {
+  const box = sel.closest('.card-pad').querySelector('.mc-options');
+  box.style.display = sel.value === 'MultipleChoice' ? '' : 'none';
+}
+// start with one question row
+document.addEventListener('DOMContentLoaded', addQuestion);
+</script>
+{% endblock %}

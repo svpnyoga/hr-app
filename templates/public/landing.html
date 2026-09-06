@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enterprise HR &amp; Workforce Management System</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script>(function(){ var t = localStorage.getItem('hr-theme'); if(t) document.documentElement.setAttribute('data-theme', t); })();</script>
+</head>
+<body>
+{% import "partials/icons.html" as ic %}
+
+<header class="pub-header">
+  <div class="pub-header-inner">
+    <div class="pub-logo"><span class="logo-dot" style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#3f6fae,#123259);display:inline-flex;align-items:center;justify-content:center;color:#fff">{{ ic.icon('shield',16) }}</span> Enterprise HR</div>
+    <nav class="pub-nav">
+      <a href="#products">Products</a>
+      <a href="#industries">Industries</a>
+      <a href="#stats">Why us</a>
+    </nav>
+    <div class="pub-header-actions">
+      <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme">{{ ic.icon('sun') }}</button>
+      <a class="btn" href="{{ url_for('auth.login') }}">Sign in</a>
+      <a class="btn primary" href="{{ url_for('auth.login') }}">Request a demo</a>
+    </div>
+  </div>
+</header>
+
+<section class="pub-hero">
+  <div class="pub-hero-inner">
+    <div class="eyebrow">{{ ic.icon('star',13) }} All-in-one Workforce Platform</div>
+    <h1>One platform for your entire employee lifecycle</h1>
+    <p class="lead">From hire to retire — recruitment, attendance, leave, payroll, performance, engagement, learning, field operations and CRM, unified in a single enterprise-grade system.</p>
+    <div class="cta-row">
+      <a class="btn accent" href="{{ url_for('auth.login') }}" style="padding:11px 20px">{{ ic.icon('arrow-right',15) }} Sign in to your workspace</a>
+      <a class="btn" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3);color:#fff;padding:11px 20px" href="#products">Explore products</a>
+    </div>
+  </div>
+</section>
+
+<section class="pub-section" id="products">
+  <div class="pub-section-head">
+    <div class="eyebrow">Products</div>
+    <h2>Every HR function, one connected suite</h2>
+    <p>Purpose-built modules that share one employee record, so data entered once flows everywhere it's needed.</p>
+  </div>
+  <div class="products-grid">
+    {% set products = [
+      ('id-card', 'HR Software', 'Centralized employee records, org structure and a full 360° employee profile.'),
+      ('credit-card', 'Claims Management Software', 'Submit, route and pay travel, medical and other expense claims with a clear approval trail.'),
+      ('briefcase', 'Applicant Tracking System', 'Requisitions, candidate pipeline, interviews and offers in one recruiting workspace.'),
+      ('clock', 'Time &amp; Attendance Tracking', 'Shifts, check-in/out, late & overtime tracking with one-click regularization.'),
+      ('target', 'Performance Appraisal Software', 'Goals, KRAs, self and manager reviews, and calibrated final ratings.'),
+      ('graduation', 'Learning Management System', 'Course catalogue, training calendar, assessments and certificates.'),
+      ('umbrella', 'Leave Management Software', 'Leave types, balances, approvals and a shared holiday calendar.'),
+      ('heart', 'Employee Engagement Software', 'Pulse surveys, recognition, awards and an engagement scorecard.'),
+      ('map-pin', 'Employee Field Tracking Software', 'Site visits, check-in locations, travel distance and daily field activity.'),
+      ('wallet', 'Payroll Software', 'Salary structures, payroll runs, statutory deductions and payslips.'),
+      ('building', 'Human Resource Software', 'Departments, designations, locations and company-wide policy settings.'),
+      ('handshake', 'CRM Software', 'Leads, customers and a visual sales pipeline for your commercial teams.'),
+    ] %}
+    {% for icon_name, title, desc in products %}
+    <div class="product-card">
+      <div class="ic-wrap">{{ ic.icon(icon_name, 22) }}</div>
+      <h3>{{ title }}</h3>
+      <p>{{ desc }}</p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="pub-section" id="industries" style="padding-top:0">
+  <div class="pub-section-head">
+    <div class="eyebrow">For Industry</div>
+    <h2>Built to flex across sectors</h2>
+    <p>The same platform, configured for how your industry actually works.</p>
+  </div>
+  <div class="industry-grid">
+    {% for name in ['Manufacturing','Engineering','Automotive','Healthcare','IT & Software','Construction','Education','Retail','Logistics','Finance','Hospitality'] %}
+    <div class="industry-chip">{{ ic.icon('building', 14) }} {{ name }}</div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="pub-section" id="stats" style="padding-top:0">
+  <div class="pub-stats">
+    <div class="pub-stat"><div class="num">18+</div><div class="lbl">Integrated modules</div></div>
+    <div class="pub-stat"><div class="num">8</div><div class="lbl">Configurable roles</div></div>
+    <div class="pub-stat"><div class="num">20+</div><div class="lbl">Built-in reports</div></div>
+    <div class="pub-stat"><div class="num">100%</div><div class="lbl">Role-based security</div></div>
+  </div>
+</section>
+
+<div class="pub-cta">
+  <h2>See it running with your own data</h2>
+  <p>Sign in to the demo workspace and explore every module — dashboards, workflows, approvals and reports.</p>
+  <a class="btn accent" href="{{ url_for('auth.login') }}" style="padding:11px 22px">{{ ic.icon('arrow-right',15) }} Sign in now</a>
+</div>
+
+<footer class="pub-footer">
+  &copy; {{ 2026 }} Enterprise HR &amp; Workforce Management System. Built for demonstration purposes.
+</footer>
+
+</body>
+</html>

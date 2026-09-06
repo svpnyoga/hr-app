@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Payroll Runs{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Payroll Runs</h1>
+    <div class="sub">{{ rows|length }} run{{ 's' if rows|length != 1 else '' }}</div>
+  </div>
+  {% if can_create %}
+  <a class="btn primary" href="{{ url_for('payroll.run_new') }}">{{ ic.icon('plus',15) }} New Payroll Run</a>
+  {% endif %}
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    {% if rows %}
+    <table class="dt">
+      <thead><tr>
+        <th>Run #</th><th>Period</th><th>Status</th><th>Total Gross</th><th>Total Deductions</th><th>Total Net</th><th style="text-align:right">Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>{{ r.run_number }}</td>
+          <td>{{ r.period_label }}</td>
+          <td><span class="badge {{ status_badge_class(r.status) }}">{{ r.status }}</span></td>
+          <td>{{ r.total_gross|money }}</td>
+          <td>{{ r.total_deductions|money }}</td>
+          <td><strong>{{ r.total_net|money }}</strong></td>
+          <td>
+            <div class="row-actions">
+              <a class="btn sm btn-icon" href="{{ url_for('payroll.run_view', id=r.id) }}" title="View">{{ ic.icon('eye',14) }}</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="ic">{{ ic.icon('wallet', 34) }}</div>
+      <p>No payroll runs yet.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

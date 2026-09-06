@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}{{ role.name }} Permissions{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('admin.roles_list') }}">Roles</a> / {{ role.name }}</div>
+<div class="page-head">
+  <div>
+    <h1>{{ ic.icon('shield',18) }} {{ role.name }}</h1>
+    <div class="sub">{{ role.description or 'Permission matrix for this role.' }}</div>
+  </div>
+</div>
+
+{% if super_admin %}
+<div class="card card-pad">
+  <div class="alert info">
+    {{ ic.icon('shield',14) }} Super Admin always has full, unrestricted access to every module and action.
+    Its permissions are hardcoded in <code>auth.py</code> and bypass the permission table entirely — there is
+    nothing to configure here.
+  </div>
+</div>
+{% else %}
+<form method="post" id="perm-form">
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-pad" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div class="text-muted" style="font-size:12.5px">Check each action this role is allowed to perform, grouped by module and record type.</div>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="btn sm" onclick="setAllPerms(true)">Select all</button>
+        <button type="button" class="btn sm" onclick="setAllPerms(false)">Clear all</button>
+      </div>
+    </div>
+  </div>
+
+  {% for module, entities in groups.items() %}
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-head">
+      <h3 style="text-transform:capitalize">{{ module }}</h3>
+      <button type="button" class="btn sm ghost" onclick="setModulePerms('{{ module }}', true)">All</button>
+    </div>
+    <div class="table-wrap">
+      <table class="dt">
+        <thead>
+          <tr>
+            <th>Record Type</th>
+            {% for action in actions %}
+            <th style="text-align:center">{{ action.replace('_',' ')|title }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for entity, action_map in entities.items() %}
+          <tr data-module="{{ module }}">
+            <td>{{ entity_labels.get(module, {}).get(entity, entity|title) }}</td>
+            {% for action in actions %}
+            <td style="text-align:center">
+              {% set perm = action_map.get(action) %}
+              {% if perm %}
+              <input type="checkbox" name="perm" value="{{ perm.code }}" title="{{ perm.code }}"
+                     {{ 'checked' if perm.code in granted_codes }}>
+              {% else %}
+              &nbsp;
+              {% endif %}
+            </td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endfor %}
+
+  <div class="form-actions">
+    <button class="btn primary" type="submit">Save permissions</button>
+    <a class="btn" href="{{ url_for('admin.roles_list') }}">Cancel</a>
+  </div>
+</form>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function setAllPerms(state) {
+  document.querySelectorAll('#perm-form input[type=checkbox]').forEach(function(cb){ cb.checked = state; });
+}
+function setModulePerms(module, state) {
+  document.querySelectorAll('#perm-form tr[data-module="' + module + '"] input[type=checkbox]').forEach(function(cb){ cb.checked = state; });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}New Appraisal Cycle{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('performance.cycles_list') }}">Appraisal Cycles</a> / New</div>
+<div class="page-head"><div><h1>New Appraisal Cycle</h1></div></div>
+
+<div class="card card-pad" style="max-width:640px">
+  <form method="post">
+    <div class="form-grid">
+      <div class="field full">
+        <label>Cycle Name <span class="req">*</span></label>
+        <input type="text" name="name" required placeholder="e.g. Annual Appraisal 2026">
+      </div>
+      <div class="field">
+        <label>Start Date <span class="req">*</span></label>
+        <input type="date" name="start_date" required>
+      </div>
+      <div class="field">
+        <label>End Date <span class="req">*</span></label>
+        <input type="date" name="end_date" required>
+      </div>
+    </div>
+    <div class="help-text" style="margin-top:8px">New cycles start in "Planning" status. You can move it forward from the cycle detail page.</div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Create Cycle</button>
+      <a class="btn" href="{{ url_for('performance.cycles_list') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

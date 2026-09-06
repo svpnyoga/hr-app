@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Salary Structure · {{ employee.first_name }} {{ employee.last_name }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('payroll.structures_list') }}">Salary Structures</a> / {{ employee.first_name }} {{ employee.last_name }}</div>
+<div class="page-head">
+  <div>
+    <h1>{{ employee.first_name }} {{ employee.last_name }}</h1>
+    <div class="sub">{{ employee.employee_code }}{{ ' · Current structure effective ' ~ (current.effective_from|fmt_date) if current else ' · No active salary structure yet' }}</div>
+  </div>
+</div>
+
+<div class="detail-grid">
+  <div class="card card-pad">
+    <h3 style="margin-bottom:14px">{{ 'New Salary Structure (versioned)' if current else 'Create Salary Structure' }}</h3>
+    {% if current %}
+    <p class="help-text" style="margin-bottom:14px">Saving creates a new version effective from the date below; the current structure is kept as history.</p>
+    {% endif %}
+    <form method="post" id="structure-form">
+      <div class="form-grid">
+        <div class="field">
+          <label>Effective From <span class="req">*</span></label>
+          <input type="date" name="effective_from" value="{{ current.effective_from if current else today }}" required>
+        </div>
+        <div class="field"></div>
+        {% for c in earning_cols %}
+        <div class="field">
+          <label>{{ labels[c] }}</label>
+          <input type="number" step="0.01" min="0" class="earning-input" name="{{ c }}" value="{{ current[c] if current else 0 }}" oninput="recalcGross()">
+        </div>
+        {% endfor %}
+        <div class="field">
+          <label>PF Employee %</label>
+          <input type="number" step="0.01" min="0" name="pf_employee_pct" value="{{ current.pf_employee_pct if current else 12 }}">
+        </div>
+        <div class="field">
+          <label>ESI Employee %</label>
+          <input type="number" step="0.01" min="0" name="esi_employee_pct" value="{{ current.esi_employee_pct if current else 0.75 }}">
+          <div class="help-text">Applied only when gross monthly is ≤ 21,000.</div>
+        </div>
+        <div class="field">
+          <label>Professional Tax (monthly)</label>
+          <input type="number" step="0.01" min="0" name="professional_tax" value="{{ current.professional_tax if current else 200 }}">
+        </div>
+        <div class="field">
+          <label>Income Tax (monthly TDS)</label>
+          <input type="number" step="0.01" min="0" name="income_tax_monthly" value="{{ current.income_tax_monthly if current else 0 }}">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn primary" type="submit">{{ 'Save new version' if current else 'Create structure' }}</button>
+        <a class="btn" href="{{ url_for('payroll.structures_list') }}">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="card card-pad">
+    <h3 style="margin-bottom:14px">Gross Monthly Breakdown</h3>
+    <table class="items">
+      <thead><tr><th>Component</th><th style="text-align:right">Amount</th></tr></thead>
+      <tbody id="breakdown-body">
+        {% for c in earning_cols %}
+        <tr><td>{{ labels[c] }}</td><td style="text-align:right" data-comp="{{ c }}">{{ ((current[c] if current else 0) or 0)|money }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="totals">
+      <div class="row grand"><span>Gross Monthly</span><span id="gross-total">{{ gross|money }}</span></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function recalcGross() {
+  const inputs = document.querySelectorAll('.earning-input');
+  let total = 0;
+  inputs.forEach(function (inp) {
+    const v = parseFloat(inp.value) || 0;
+    total += v;
+    const cell = document.querySelector('[data-comp="' + inp.name + '"]');
+    if (cell) cell.textContent = v.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  });
+  document.getElementById('gross-total').textContent = total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+</script>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}New Lead{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('crm.leads_pipeline') }}">Leads Pipeline</a> / New</div>
+<div class="page-head"><div><h1>New Lead</h1></div></div>
+
+<div class="card card-pad" style="max-width:880px">
+  <form method="post">
+    <div class="form-grid">
+      <div class="field">
+        <label>Company Name <span class="req">*</span></label>
+        <input type="text" name="company_name" required>
+      </div>
+      <div class="field">
+        <label>Contact Name</label>
+        <input type="text" name="contact_name">
+      </div>
+      <div class="field">
+        <label>Phone</label>
+        <input type="tel" name="phone">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" name="email">
+      </div>
+      <div class="field">
+        <label>Source</label>
+        <input type="text" name="source" placeholder="e.g. Referral, Website, Cold call">
+      </div>
+      <div class="field">
+        <label>Estimated Value</label>
+        <input type="number" step="any" name="estimated_value">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Create Lead</button>
+      <a class="btn" href="{{ url_for('crm.leads_pipeline') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

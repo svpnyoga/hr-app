@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Create Offer{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('recruitment.application_view', id=app.id) }}">{{ app.candidate_name }}</a> / Create Offer</div>
+<div class="page-head"><div><h1>Create Offer</h1><div class="sub">{{ app.candidate_name }} — {{ app.requisition_title }}</div></div></div>
+
+<div class="card card-pad" style="max-width:640px">
+  <form method="post">
+    <div class="form-grid">
+      <div class="field">
+        <label>Designation</label>
+        <select name="designation_id">
+          <option value="">— Select —</option>
+          {% for d in designations %}<option value="{{ d.id }}">{{ d.title }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>CTC</label>
+        <input type="number" step="any" name="ctc">
+      </div>
+      <div class="field">
+        <label>Joining Date</label>
+        <input type="date" name="joining_date">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Create Offer</button>
+      <a class="btn" href="{{ url_for('recruitment.application_view', id=app.id) }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

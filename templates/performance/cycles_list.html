@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as ic %}
+{% block title %}Appraisal Cycles{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Appraisal Cycles</h1>
+    <div class="sub">{{ cycles|length }} cycle{{ 's' if cycles|length != 1 else '' }}</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    {% if can_create %}
+    <a class="btn primary" href="{{ url_for('performance.cycle_new') }}">{{ ic.icon('plus',15) }} New Cycle</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    {% if cycles %}
+    <table class="dt">
+      <thead><tr>
+        <th>Name</th><th>Start</th><th>End</th><th>Status</th><th>Participants</th>
+        <th style="text-align:right">Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for c in cycles %}
+        <tr>
+          <td><a href="{{ url_for('performance.cycle_view', id=c.id) }}" style="font-weight:650">{{ c.name }}</a></td>
+          <td>{{ c.start_date|fmt_date }}</td>
+          <td>{{ c.end_date|fmt_date }}</td>
+          <td><span class="badge {{ status_badge_class(c.status) }}">{{ c.status }}</span></td>
+          <td>{{ c.participant_count }}</td>
+          <td>
+            <div class="row-actions">
+              <a class="btn sm btn-icon" href="{{ url_for('performance.cycle_view', id=c.id) }}" title="View">{{ ic.icon('eye',14) }}</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="ic">{{ ic.icon('target', 34) }}</div>
+      <p>No appraisal cycles yet.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

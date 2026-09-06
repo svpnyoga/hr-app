@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Log Activity{% endblock %}
+{% block content %}
+{% set back_url = url_for('crm.lead_view', id=lead.id) if lead else (url_for('crm.customer_view', id=customer.id) if customer else url_for('crm.customers_list')) %}
+<div class="breadcrumb"><a href="{{ back_url }}">{{ lead.company_name if lead else (customer.name if customer else 'CRM') }}</a> / Log Activity</div>
+<div class="page-head">
+  <div>
+    <h1>Log Activity</h1>
+    <div class="sub">
+      {% if lead %}For lead {{ lead.lead_number }} — {{ lead.company_name }}
+      {% elif customer %}For customer {{ customer.customer_code }} — {{ customer.name }}{% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="card card-pad" style="max-width:720px">
+  <form method="post">
+    {% if lead %}<input type="hidden" name="lead_id" value="{{ lead.id }}">{% endif %}
+    {% if customer %}<input type="hidden" name="customer_id" value="{{ customer.id }}">{% endif %}
+    <div class="form-grid">
+      <div class="field">
+        <label>Type</label>
+        <select name="activity_type">
+          {% for t in activity_types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" name="activity_date" value="{{ today }}">
+      </div>
+      <div class="field full">
+        <label>Subject</label>
+        <input type="text" name="subject">
+      </div>
+      <div class="field full">
+        <label>Notes</label>
+        <textarea name="notes"></textarea>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Log Activity</button>
+      <a class="btn" href="{{ back_url }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

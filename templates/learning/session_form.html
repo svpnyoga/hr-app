@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Schedule Session · {{ course.title }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('learning.courses_list') }}">Courses</a> / <a href="{{ url_for('learning.course_view', id=course.id) }}">{{ course.title }}</a> / Schedule session</div>
+<div class="page-head"><div><h1>Schedule a session</h1><div class="sub">{{ course.title }} ({{ course.course_code }})</div></div></div>
+
+<div class="card card-pad" style="max-width:880px">
+  <form method="post">
+    <div class="form-grid">
+      <div class="field">
+        <label>Session date <span class="req">*</span></label>
+        <input type="date" name="session_date" required>
+      </div>
+      <div></div>
+      <div class="field">
+        <label>Start time</label>
+        <input type="time" name="start_time">
+      </div>
+      <div class="field">
+        <label>End time</label>
+        <input type="time" name="end_time">
+      </div>
+      <div class="field">
+        <label>Location</label>
+        <select name="location_id">
+          <option value="">— Select —</option>
+          {% for l in locations %}
+          <option value="{{ l.id }}">{{ l.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Trainer name</label>
+        <input type="text" name="trainer_name" value="{{ course.trainer_name or '' }}">
+      </div>
+      <div class="field">
+        <label>Capacity</label>
+        <input type="number" min="1" step="1" name="capacity" value="20">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Schedule session</button>
+      <a class="btn" href="{{ url_for('learning.course_view', id=course.id) }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
